@@ -1,0 +1,31 @@
+
+# React / Node.js
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.production
+**/.env.development
+
+# Java Spring Boot
+**/target/
+**/.gradle/
+*.class
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
