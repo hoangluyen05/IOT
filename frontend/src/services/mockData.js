@@ -90,7 +90,7 @@ export const resources = [
     title: "GitHub Repository",
     description: "Source code and project files",
     type: "CODE",
-    url: "",
+    url: "https://github.com/hoangluyen05/IOT",
   },
   {
     title: "Figma Design",

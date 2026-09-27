@@ -6,10 +6,12 @@ import {
   Routes,
   Route,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 
 import Sidebar from "./components/Sidebar";
 
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import DataSensor from "./pages/DataSensor";
 import ActionHistory from "./pages/ActionHistory";
@@ -19,33 +21,52 @@ import useSensorSimulation from "./hooks/useSensorSimulation";
 
 import { initialDevices } from "./services/mockData";
 
+import {
+  isAuthenticated,
+  logout,
+} from "./services/authService";
+
 import "./styles/global.css";
 
-export default function App() {
-  const { sensor, history, records } = useSensorSimulation();
-
-  const [devices, setDevices] = useState(initialDevices);
-
-  const [actions, setActions] = useState([]);
-
-  function addAction(action) {
-    setActions((previous) => [action, ...previous]);
+// Component bảo vệ các trang cần đăng nhập
+function ProtectedRoute({ authenticated, children }) {
+  if (!authenticated) {
+    return <Navigate to="/login" replace />;
   }
 
+  return children;
+}
+
+// Layout chính của hệ thống
+function MainLayout({
+  authenticated,
+  onLogout,
+  sensor,
+  history,
+  records,
+  devices,
+  setDevices,
+  actions,
+  addAction,
+}) {
+  const navigate = useNavigate();
+
   function handleLogout() {
-    // Chưa có Backend xác thực.
-    // Sẽ triển khai khi xây dựng chức năng Login.
-    window.alert("Chức năng đăng xuất sẽ được tích hợp sau.");
+    logout();
+    onLogout();
+
+    navigate("/login", { replace: true });
   }
 
   return (
-    <BrowserRouter>
+    <ProtectedRoute authenticated={authenticated}>
       <div className="app-layout">
         <Sidebar />
 
         <div className="app-right">
           <header className="topbar">
             <button
+              type="button"
               className="logout-button"
               onClick={handleLogout}
             >
@@ -56,7 +77,7 @@ export default function App() {
           <main className="main-content">
             <Routes>
               <Route
-                path="/"
+                index
                 element={
                   <Dashboard
                     sensor={sensor}
@@ -69,21 +90,17 @@ export default function App() {
               />
 
               <Route
-                path="/sensors"
-                element={
-                  <DataSensor records={records} />
-                }
+                path="sensors"
+                element={<DataSensor records={records} />}
               />
 
               <Route
-                path="/history"
-                element={
-                  <ActionHistory actions={actions} />
-                }
+                path="history"
+                element={<ActionHistory actions={actions} />}
               />
 
               <Route
-                path="/profile"
+                path="profile"
                 element={<Profile />}
               />
 
@@ -95,6 +112,71 @@ export default function App() {
           </main>
         </div>
       </div>
+    </ProtectedRoute>
+  );
+}
+
+// Component App chính
+export default function App() {
+  const [authenticated, setAuthenticated] = useState(
+    () => isAuthenticated()
+  );
+
+  const { sensor, history, records } = useSensorSimulation();
+
+  const [devices, setDevices] = useState(initialDevices);
+
+  const [actions, setActions] = useState([]);
+
+  function addAction(action) {
+    setActions((previous) => [action, ...previous]);
+  }
+
+  function handleLogin() {
+    setAuthenticated(true);
+  }
+
+  function handleLogout() {
+    setAuthenticated(false);
+
+    // Đặt lại trạng thái thiết bị và lịch sử demo
+    setDevices(initialDevices);
+    setActions([]);
+  }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Trang đăng nhập */}
+        <Route
+          path="/login"
+          element={
+            authenticated ? (
+              <Navigate to="/" replace />
+            ) : (
+              <Login onLogin={handleLogin} />
+            )
+          }
+        />
+
+        {/* Các trang cần đăng nhập */}
+        <Route
+          path="/*"
+          element={
+            <MainLayout
+              authenticated={authenticated}
+              onLogout={handleLogout}
+              sensor={sensor}
+              history={history}
+              records={records}
+              devices={devices}
+              setDevices={setDevices}
+              actions={actions}
+              addAction={addAction}
+            />
+          }
+        />
+      </Routes>
     </BrowserRouter>
   );
 }
