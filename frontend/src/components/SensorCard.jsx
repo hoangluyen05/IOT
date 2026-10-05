@@ -13,6 +13,7 @@ const subtitles = {
   humidity: "Air Moisture Level",
   light: "Intensity",
 };
+
 // nhận dữ liệu
 // type xác định cảm biến nào đang được hiển thị, còn value là giá trị đo.
 export default function SensorCard({ type, value }) {
@@ -24,49 +25,72 @@ export default function SensorCard({ type, value }) {
     Math.max(0, (value / config.max) * 100)
   );
 
-  const status =
-    value < config.optimalMin
-      ? "Low"
-      : value > config.optimalMax
-      ? "High"
-      : "Normal";
+  // Kiểm tra giá trị cảm biến có thấp hoặc cao hơn ngưỡng tối ưu hay không
+  const isLow = value < config.optimalMin;
+  const isHigh = value > config.optimalMax;
+  const isWarning = isLow || isHigh;
+
+  // Xác định trạng thái cảm biến
+  const status = isLow
+    ? "Low"
+    : isHigh
+    ? "High"
+    : "Normal";
 
   return (
-    <div className="sensor-card">
+    <div
+      className={`sensor-card ${
+        isWarning ? "sensor-card-warning" : ""
+      }`}
+    >
       <div className="sensor-card-top">
         <div>
           <h3>{config.name}</h3>
           <p>{subtitles[type]}</p>
         </div>
 
-        <div className="sensor-icon">
+        <div
+          className={`sensor-icon ${
+            isWarning ? "sensor-icon-warning" : ""
+          }`}
+        >
           <Icon size={25} />
         </div>
       </div>
+
       {/* Hiển thị giá trị cảm biến */}
-      <div className="sensor-number">
+      <div
+        className={`sensor-number ${
+          isWarning ? "sensor-number-warning" : ""
+        }`}
+      >
         {value}
         <span>{config.unit}</span>
       </div>
+
       {/* Hiển thị thanh tiến trình */}
       <div className="progress-track">
         <div
-          className="progress-fill"
+          className={`progress-fill ${
+            isWarning ? "progress-warning" : ""
+          }`}
           style={{ width: `${percentage}%` }}
         />
       </div>
+
       {/* Hiển thị trạng thái cảm biến */}
       <div className="sensor-footer">
         <span>
           Optimal: {config.optimalMin}-{config.optimalMax}
           {config.unit}
         </span>
-      {/* Hiển thị trạng thái cảm biến */}
+
+        {/* Hiển thị trạng thái cảm biến */}
         <span
           className={
-            status === "Normal"
-              ? "status-normal"
-              : "status-warning"
+            isWarning
+              ? "status-warning"
+              : "status-normal"
           }
         >
           ● {status}

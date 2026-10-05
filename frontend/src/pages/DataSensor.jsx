@@ -94,7 +94,7 @@ export default function DataSensor({ records }) {
                 <th>ID</th>
                 <th>TIME</th>
                 <th>SENSOR TYPE</th>
-                <th>VALUE</th>
+                <th className="value-column">VALUE</th>
               </tr>
             </thead>
             {/* Hiển thị dữ liệu cảm biến */}

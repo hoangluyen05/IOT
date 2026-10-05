@@ -18,7 +18,7 @@ export default function Sidebar() {
     },
     {
       path: "/sensors",
-      label: "Sensors",
+      label: "Data Sensors",
       icon: Radio,
     },
     {

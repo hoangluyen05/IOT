@@ -10,7 +10,7 @@ export const sensorConfig = {
     name: "Temperature",
     shortName: "Temp",
     unit: "°C",
-    min: 20,
+    min: 15,
     max: 40,
     optimalMin: 22,
     optimalMax: 26,

@@ -572,12 +572,29 @@ a {
   gap: 12px;
 }
 
+/* Căn giữa tiêu đề VALUE */
+.value-header {
+  text-align: center !important;
+}
+/* Căn chữ VALUE và giá trị bên dưới cùng một trục */
+.data-table th.value-column,
+.data-table td.value-column {
+  text-align: center !important;
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
+.data-table td.value-column {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Căn giữa dữ liệu cột VALUE */
 .value-cell {
-  text-align: right;
+  text-align: center !important;
   font-weight: 700;
   color: #1e293b !important;
 }
-
 .type-badge {
   display: inline-flex;
   align-items: center;
@@ -1211,4 +1228,45 @@ a.resource-card:hover {
   min-height: 0;
 
   overflow: hidden;
+}
+/* =========================================
+   SENSOR WARNING
+========================================= */
+
+/* Card khi cảm biến vượt ngưỡng */
+.sensor-card-warning {
+  border: 1px solid #fecaca;
+  background: #fffafa;
+}
+
+/* Giá trị cảm biến chuyển sang đỏ */
+.sensor-number-warning {
+  color: #dc2626;
+}
+
+.sensor-number-warning span {
+  color: #dc2626;
+}
+
+/* Thanh progress chuyển sang đỏ */
+.progress-fill.progress-warning {
+  background: #dc2626;
+}
+
+/* Icon chuyển sang đỏ */
+.sensor-icon-warning {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Trạng thái bình thường */
+.status-normal {
+  color: #1048c5;
+  font-weight: 600;
+}
+
+/* Trạng thái cảnh báo */
+.status-warning {
+  color: #dc2626;
+  font-weight: 700;
 }
