@@ -1,4 +1,4 @@
-
+// Thông tin cá nhân
 import {
   Mail,
   MapPin,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { profile, resources } from "../services/mockData";
-
+// Biểu tượng tài nguyên
 const resourceIcons = {
   PDF: FileText,
   API: Blocks,
@@ -23,19 +23,20 @@ export default function Profile() {
     <div className="profile-page">
       <div className="profile-card">
         <div className="profile-heading">
+          {/* Ảnh đại diện */}
           <img
             src={profile.avatar}
             alt="Avatar"
             className="profile-avatar"
           />
-
+          {/* Tên người dùng */}
           <h2>{profile.name}</h2>
-
+          {/* Mã sinh viên */}
           <p>Student ID: {profile.studentId}</p>
-
+          {/* Ngành học */}
           <span className="major-badge">{profile.major}</span>
         </div>
-
+        {/* Thông tin chi tiết */}
         <div className="profile-details">
           <div className="profile-detail">
             <Mail size={19} />
@@ -62,14 +63,14 @@ export default function Profile() {
           </div>
         </div>
       </div>
-
+      {/* Tài liệu & Tài nguyên */}
       <div className="resources-section">
         <h2>Documentation & Resources</h2>
 
         <div className="resources-grid">
           {resources.map((item) => {
-            const Icon = resourceIcons[item.type];
-
+            const Icon = resourceIcons[item.type]; // Biểu tượng tài nguyên
+            // Nội dung tài nguyên
             const content = (
               <>
                 <div className="resource-top">
@@ -84,7 +85,7 @@ export default function Profile() {
                 <p>{item.description}</p>
               </>
             );
-
+            // Trả về thẻ tài nguyên
             return item.url ? (
               <a
                 key={item.title}

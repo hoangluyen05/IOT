@@ -1,4 +1,5 @@
-
+// xử lý đăng nhập, đăng xuất
+// tài khoản mặc định
 const DEFAULT_ACCOUNT = {
   username: "luyenht",
   password: "b23dccn521",
@@ -34,7 +35,7 @@ export function login(username, password) {
 // Kiểm tra trạng thái đăng nhập
 export function isAuthenticated() {
   return (
-    sessionStorage.getItem(SESSION_KEY) === "authenticated"
+    sessionStorage.getItem(SESSION_KEY) === "authenticated" // lưu trạng thái đăng nhập trong phiên trình duyệt
   );
 }
 

@@ -1,4 +1,3 @@
-
 import SensorCard from "../components/SensorCard";
 import SensorChart from "../components/SensorChart";
 import DeviceControl from "../components/DeviceControl";

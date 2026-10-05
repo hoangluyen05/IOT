@@ -1,10 +1,10 @@
-
+// dữ liệu cố định ban đầu
 export const initialSensor = {
   temperature: 24,
   humidity: 60,
   light: 800,
 };
-
+// Cấu hình cảm biến
 export const sensorConfig = {
   temperature: {
     name: "Temperature",
@@ -40,7 +40,7 @@ export const sensorConfig = {
   },
 };
 
-
+// Dữ liệu led ban đầu
 export const initialDevices = [
   {
     id: 1,
@@ -70,7 +70,7 @@ export const profile = {
   email: "hoangluyen23072005k@gmail.com",
   location: "Hanoi, Vietnam",
   university: "Posts and Telecommunications Institute of Technology",
-  avatar: "/avatar.jpg",
+  avatar: "/avatar.jfif",
 };
 
 export const resources = [

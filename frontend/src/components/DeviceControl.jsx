@@ -1,14 +1,15 @@
-
+// điều khiển led
 import { useState } from "react";
 import { Lightbulb } from "lucide-react";
 
+// Hook điều khiển LED
 export default function DeviceControl({
   devices,
   setDevices,
   onAction,
 }) {
   const [pendingId, setPendingId] = useState(null);
-
+  // hàm xử lý bật/tắt LED
   async function handleToggle(device) {
     if (pendingId !== null) return;
 

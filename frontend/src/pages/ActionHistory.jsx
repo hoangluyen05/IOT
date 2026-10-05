@@ -9,7 +9,7 @@ export default function ActionHistory({ actions }) {
   const [device, setDevice] = useState("all");
   const [action, setAction] = useState("all");
   const [page, setPage] = useState(1);
-
+  // Lọc các hành động theo điều kiện
   const filtered = actions.filter((item) => {
     const date = new Date(item.timestamp).toLocaleString("vi-VN");
 
@@ -33,13 +33,13 @@ export default function ActionHistory({ actions }) {
   );
 
   return (
-    <div className="history-page">
+    <div className="history-page data-page">
       <h1 className="page-title">History</h1>
 
       <div className="history-filter">
         <div className="search-field">
           <Search size={20} />
-
+          {/* Tìm kiếm theo thời gian */}
           <input
             placeholder="Search by time..."
             value={search}
@@ -49,7 +49,7 @@ export default function ActionHistory({ actions }) {
             }}
           />
         </div>
-
+        {/* Lọc theo thiết bị */}
         <select
           value={device}
           onChange={(e) => {
@@ -64,7 +64,7 @@ export default function ActionHistory({ actions }) {
 <option value="LED 3">LED 3</option>
 
         </select>
-
+        {/* Lọc theo hành động */}
         <select
           value={action}
           onChange={(e) => {
@@ -77,7 +77,7 @@ export default function ActionHistory({ actions }) {
           <option value="OFF">OFF</option>
         </select>
       </div>
-
+      {/* Hiển thị bảng dữ liệu */}
       <div className="table-card">
         <div className="table-scroll">
           <table className="data-table">
@@ -90,19 +90,19 @@ export default function ActionHistory({ actions }) {
                 <th>STATUS</th>
               </tr>
             </thead>
-
+            {/* Hiển thị dữ liệu lịch sử */}
             <tbody>
               {displayed.map((item) => (
                 <tr key={item.id}>
                   <td>#{item.id}</td>
-
+                {/* Hiển thị thời gian */}
                   <td>
                     <span className="time-cell">
                       <CalendarDays size={16} />
                       {new Date(item.timestamp).toLocaleString("vi-VN")}
                     </span>
                   </td>
-
+                {/* Hiển thị thiết bị */}
                   <td>
                     <span
                       className={`type-badge ${
@@ -116,7 +116,7 @@ export default function ActionHistory({ actions }) {
                       {item.deviceName}
                     </span>
                   </td>
-
+                  {/* Hiển thị hành động */}
                   <td>
                     <span
                       className={`action-badge ${item.action.toLowerCase()}`}
@@ -124,7 +124,7 @@ export default function ActionHistory({ actions }) {
                       {item.action}
                     </span>
                   </td>
-
+                  {/* Hiển thị trạng thái */}
                   <td>
                     <span
                       className={
@@ -138,7 +138,7 @@ export default function ActionHistory({ actions }) {
                   </td>
                 </tr>
               ))}
-
+              {/* Hiển thị trạng thái không có dữ liệu */}
               {displayed.length === 0 && (
                 <tr>
                   <td colSpan="5" className="empty-state">

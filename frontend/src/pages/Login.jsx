@@ -39,7 +39,7 @@ export default function Login({ onLogin }) {
     }
 
     setLoading(true);
-
+    {/*kiểm tra hàm login*/}
     const result = login(username, password);
 
     setLoading(false);
@@ -49,8 +49,8 @@ export default function Login({ onLogin }) {
       return;
     }
 
-    onLogin();
-    navigate("/", { replace: true });
+    onLogin(); {/*thông báo cho app người dùng đã đăng nhập*/}
+    navigate("/", { replace: true }); {/*Chuyển về trang dashboard*/}
   }
 
   return (
@@ -58,7 +58,7 @@ export default function Login({ onLogin }) {
       <div className="login-container">
 
         {/* Logo */}
-        <div className="login-brand">
+        <div className="login-brand">  {/* css định dạng */}
           <div className="login-brand-icon">
             <GraduationCap size={34} strokeWidth={2.3} />
           </div>
@@ -66,7 +66,6 @@ export default function Login({ onLogin }) {
           <h1>Smart Class</h1>
           <p>Smart Classroom IoT Monitoring System</p>
         </div>
-
         {/* Form */}
         <div className="login-card">
           <div className="login-heading">

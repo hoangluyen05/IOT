@@ -1,4 +1,4 @@
-
+// thẻ nhiệt độ, độ ẩm, ánh sáng
 import { Thermometer, Droplet, Sun } from "lucide-react";
 import { sensorConfig } from "../services/mockData";
 
@@ -13,7 +13,8 @@ const subtitles = {
   humidity: "Air Moisture Level",
   light: "Intensity",
 };
-
+// nhận dữ liệu
+// type xác định cảm biến nào đang được hiển thị, còn value là giá trị đo.
 export default function SensorCard({ type, value }) {
   const config = sensorConfig[type];
   const Icon = icons[type];
@@ -42,25 +43,25 @@ export default function SensorCard({ type, value }) {
           <Icon size={25} />
         </div>
       </div>
-
+      {/* Hiển thị giá trị cảm biến */}
       <div className="sensor-number">
         {value}
         <span>{config.unit}</span>
       </div>
-
+      {/* Hiển thị thanh tiến trình */}
       <div className="progress-track">
         <div
           className="progress-fill"
           style={{ width: `${percentage}%` }}
         />
       </div>
-
+      {/* Hiển thị trạng thái cảm biến */}
       <div className="sensor-footer">
         <span>
           Optimal: {config.optimalMin}-{config.optimalMax}
           {config.unit}
         </span>
-
+      {/* Hiển thị trạng thái cảm biến */}
         <span
           className={
             status === "Normal"

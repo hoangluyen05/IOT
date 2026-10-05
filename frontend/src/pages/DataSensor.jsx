@@ -14,7 +14,7 @@ export default function DataSensor({ records }) {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
   const [page, setPage] = useState(1);
-
+  // Tạo bảng dữ liệu từ bản ghi cảm biến
   const rows = records.flatMap((record) =>
     sensorTypes.map((sensor, index) => ({
       id: record.timestamp * 10 + index,
@@ -45,7 +45,7 @@ export default function DataSensor({ records }) {
   );
 
   const currentPage = Math.min(page, totalPages);
-
+  // Xác định các bản ghi được hiển thị trên trang hiện tại
   const displayed = filtered.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
@@ -63,7 +63,7 @@ export default function DataSensor({ records }) {
       <div className="filter-card">
         <div className="search-field">
           <Search size={20} />
-
+          {/* Tìm kiếm theo thời gian */}
           <input
             placeholder="Search time..."
             value={search}
@@ -72,7 +72,7 @@ export default function DataSensor({ records }) {
             }
           />
         </div>
-
+        {/* Lọc theo loại cảm biến */}
         <select
           value={type}
           onChange={(e) =>
@@ -85,7 +85,7 @@ export default function DataSensor({ records }) {
           <option value="light">Light</option>
         </select>
       </div>
-
+      {/* Hiển thị bảng dữ liệu */}
       <div className="table-card">
         <div className="table-scroll">
           <table className="data-table">
@@ -97,31 +97,31 @@ export default function DataSensor({ records }) {
                 <th>VALUE</th>
               </tr>
             </thead>
-
+            {/* Hiển thị dữ liệu cảm biến */}
             <tbody>
               {displayed.map((item) => (
                 <tr key={item.id}>
                   <td>#{item.id}</td>
-
+                  {/* Hiển thị thời gian */}
                   <td>
                     <span className="time-cell">
                       <CalendarDays size={16} />
                       {new Date(item.timestamp).toLocaleString("vi-VN")}
                     </span>
                   </td>
-
+                  {/* Hiển thị loại cảm biến */}
                   <td>
                     <span className={`type-badge ${item.type}`}>
                       ● {item.label}
                     </span>
                   </td>
-
+                  {/* Hiển thị giá trị cảm biến */}
                   <td className="value-cell">
                     {item.value} {item.unit}
                   </td>
                 </tr>
               ))}
-
+              {/* Hiển thị trạng thái không có dữ liệu */}
               {displayed.length === 0 && (
                 <tr>
                   <td colSpan="4" className="empty-state">
@@ -132,7 +132,7 @@ export default function DataSensor({ records }) {
             </tbody>
           </table>
         </div>
-
+        {/* Hiển thị chân trang */}
         <div className="table-footer">
           <span>
             Showing {displayed.length} of {filtered.length}

@@ -1,4 +1,4 @@
-
+// biểu đồ cảm biến
 import { useState } from "react";
 
 import {
@@ -74,16 +74,16 @@ export default function SensorChart({ data }) {
           ))}
         </div>
       </div>
-
+      {/* Hiển thị biểu đồ */}
       <div className="chart-body">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <CartesianGrid
+          <LineChart data={chartData}> {/* Hiển thị biểu đồ đường */}
+            <CartesianGrid // Hiển thị lưới
               stroke="#e9eef9"
               vertical={false}
             />
 
-            <XAxis
+            <XAxis // Hiển thị trục x thời gian
               dataKey="time"
               tick={{ fill: "#64748b", fontSize: 11 }}
               tickLine={false}
@@ -91,7 +91,7 @@ export default function SensorChart({ data }) {
               minTickGap={28}
             />
 
-            <YAxis
+            <YAxis // Hiển thị trục y giá trị cảm biến
               domain={[0, 100]}
               tick={{ fill: "#64748b", fontSize: 11 }}
               tickLine={false}
@@ -99,7 +99,7 @@ export default function SensorChart({ data }) {
               width={35}
             />
 
-            <Tooltip
+            <Tooltip // Hiển thị dữ liệu khi di chuột
               formatter={(value, name, props) => {
                 const raw = props.payload;
 

@@ -116,7 +116,7 @@ function MainLayout({
   );
 }
 
-// Component App chính
+// Component App chính, khối kiểm tra đăng nhập
 export default function App() {
   const [authenticated, setAuthenticated] = useState(
     () => isAuthenticated()
