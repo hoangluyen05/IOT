@@ -1270,3 +1270,51 @@ a.resource-card:hover {
   color: #dc2626;
   font-weight: 700;
 }
+/* Nút Clear All cùng format với bộ lọc */
+.clear-filter-button {
+  height: 55px;
+  padding: 0 20px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #f5f7ff;
+  color: #1e293b;
+
+  font-size: 14px;
+  font-weight: 400;
+
+  transition: all 0.2s ease;
+}
+
+/* Khi di chuột */
+.clear-filter-button:hover:not(:disabled) {
+  background: #e8eeff;
+  color: #1048c5;
+}
+
+/* Khi chưa có điều kiện để Clear */
+.clear-filter-button:disabled {
+  background: #f5f7ff;
+  color: #94a3b8;
+  opacity: 1;
+  cursor: not-allowed;
+}
+/* USER TRONG HISTORY */
+
+.history-user {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-user strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.history-user span {
+  font-size: 11px;
+  color: #94a3b8;
+}

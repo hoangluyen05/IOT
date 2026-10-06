@@ -1,6 +1,11 @@
 
 import { useState } from "react";
-import { Search, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 const PAGE_SIZE = 10;
 
@@ -14,6 +19,14 @@ export default function DataSensor({ records }) {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
   const [page, setPage] = useState(1);
+
+  // Xóa toàn bộ điều kiện tìm kiếm và bộ lọc
+  const handleClearAll = () => {
+    setSearch("");
+    setType("all");
+    setPage(1);
+  };
+
   // Tạo bảng dữ liệu từ bản ghi cảm biến
   const rows = records.flatMap((record) =>
     sensorTypes.map((sensor, index) => ({
@@ -84,6 +97,15 @@ export default function DataSensor({ records }) {
           <option value="humidity">Humidity</option>
           <option value="light">Light</option>
         </select>
+        {/* Xóa tìm kiếm và bộ lọc */}
+  <button
+    type="button"
+    className="clear-filter-button"
+    onClick={handleClearAll}
+    disabled={search === "" && type === "all"}
+  >
+    Clear All
+  </button>
       </div>
       {/* Hiển thị bảng dữ liệu */}
       <div className="table-card">

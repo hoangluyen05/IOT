@@ -1,14 +1,22 @@
-
 import { useState } from "react";
 import { Search, CalendarDays } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
-export default function ActionHistory({ actions }) {
+export default function ActionHistory({ actions, currentUser }) {
   const [search, setSearch] = useState("");
   const [device, setDevice] = useState("all");
   const [action, setAction] = useState("all");
   const [page, setPage] = useState(1);
+
+  // Xóa toàn bộ điều kiện tìm kiếm và bộ lọc
+  const handleClearAll = () => {
+    setSearch("");
+    setDevice("all");
+    setAction("all");
+    setPage(1);
+  };
+
   // Lọc các hành động theo điều kiện
   const filtered = actions.filter((item) => {
     const date = new Date(item.timestamp).toLocaleString("vi-VN");
@@ -39,6 +47,7 @@ export default function ActionHistory({ actions }) {
       <div className="history-filter">
         <div className="search-field">
           <Search size={20} />
+
           {/* Tìm kiếm theo thời gian */}
           <input
             placeholder="Search by time..."
@@ -49,6 +58,7 @@ export default function ActionHistory({ actions }) {
             }}
           />
         </div>
+
         {/* Lọc theo thiết bị */}
         <select
           value={device}
@@ -57,13 +67,12 @@ export default function ActionHistory({ actions }) {
             setPage(1);
           }}
         >
-          
-<option value="all">All Devices</option>
-<option value="LED 1">LED 1</option>
-<option value="LED 2">LED 2</option>
-<option value="LED 3">LED 3</option>
-
+          <option value="all">All Devices</option>
+          <option value="LED 1">LED 1</option>
+          <option value="LED 2">LED 2</option>
+          <option value="LED 3">LED 3</option>
         </select>
+
         {/* Lọc theo hành động */}
         <select
           value={action}
@@ -76,7 +85,22 @@ export default function ActionHistory({ actions }) {
           <option value="ON">ON</option>
           <option value="OFF">OFF</option>
         </select>
+
+        {/* Xóa toàn bộ điều kiện tìm kiếm và bộ lọc */}
+        <button
+          type="button"
+          className="clear-filter-button"
+          onClick={handleClearAll}
+          disabled={
+            search === "" &&
+            device === "all" &&
+            action === "all"
+          }
+        >
+          Clear All
+        </button>
       </div>
+
       {/* Hiển thị bảng dữ liệu */}
       <div className="table-card">
         <div className="table-scroll">
@@ -84,38 +108,55 @@ export default function ActionHistory({ actions }) {
             <thead>
               <tr>
                 <th>ID</th>
+                <th>USER</th>
                 <th>TIME</th>
                 <th>DEVICE</th>
                 <th>ACTION</th>
                 <th>STATUS</th>
               </tr>
             </thead>
+
             {/* Hiển thị dữ liệu lịch sử */}
             <tbody>
               {displayed.map((item) => (
                 <tr key={item.id}>
                   <td>#{item.id}</td>
-                {/* Hiển thị thời gian */}
+
+                  {/* Hiển thị người dùng thực hiện hành động */}
+                  <td>
+                    <div className="history-user">
+                      <strong>
+                        {item.userName ||
+                          currentUser?.name ||
+                          "Hoàng Thị Luyến"}
+                      </strong>
+
+                      <span>
+                        {item.username ||
+                          currentUser?.username ||
+                          "luyenht"}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Hiển thị thời gian */}
                   <td>
                     <span className="time-cell">
                       <CalendarDays size={16} />
-                      {new Date(item.timestamp).toLocaleString("vi-VN")}
+
+                      {new Date(
+                        item.timestamp
+                      ).toLocaleString("vi-VN")}
                     </span>
                   </td>
-                {/* Hiển thị thiết bị */}
+
+                  {/* Hiển thị thiết bị */}
                   <td>
-                    <span
-                      className={`type-badge ${
-                        item.deviceName === "Lighting"
-                          ? "light"
-                          : item.deviceName === "Humidity"
-                          ? "humidity"
-                          : "temperature"
-                      }`}
-                    >
-                      {item.deviceName}
+                    <span className="type-badge temperature">
+                      ● {item.deviceName}
                     </span>
                   </td>
+
                   {/* Hiển thị hành động */}
                   <td>
                     <span
@@ -124,6 +165,7 @@ export default function ActionHistory({ actions }) {
                       {item.action}
                     </span>
                   </td>
+
                   {/* Hiển thị trạng thái */}
                   <td>
                     <span
@@ -138,10 +180,11 @@ export default function ActionHistory({ actions }) {
                   </td>
                 </tr>
               ))}
+
               {/* Hiển thị trạng thái không có dữ liệu */}
               {displayed.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="empty-state">
+                  <td colSpan="6" className="empty-state">
                     No action history found
                   </td>
                 </tr>
@@ -163,7 +206,9 @@ export default function ActionHistory({ actions }) {
               Prev
             </button>
 
-            <button className="selected">{currentPage}</button>
+            <button className="selected">
+              {currentPage}
+            </button>
 
             <button
               disabled={currentPage === totalPages}
