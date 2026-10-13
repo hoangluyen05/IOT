@@ -118,7 +118,7 @@ export default function SensorChart({ data }) {
                 boxShadow: "0 8px 24px #15295a15",
               }}
             />
-
+            {/* Đường biểu đồ nhiệt độ */}
             {visible.temperature && (
               <Line
                 type="monotone"

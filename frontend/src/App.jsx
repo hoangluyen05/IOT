@@ -70,7 +70,7 @@ function MainLayout({
               className="logout-button"
               onClick={handleLogout}
             >
-              Đăng xuất
+              Log out
             </button>
           </header>
 

@@ -1,5 +1,7 @@
+/* Tải font Inter dùng cho toàn bộ giao diện */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
+/* Thiết lập font, màu chữ và nền mặc định */
 :root {
   font-family: "Inter", Arial, sans-serif;
   color: #1e293b;
@@ -7,10 +9,12 @@
   font-synthesis: none;
 }
 
+/* Tính kích thước phần tử gồm cả padding và border */
 * {
   box-sizing: border-box;
 }
 
+/* Xóa lề mặc định và giới hạn chiều rộng tối thiểu */
 body {
   margin: 0;
   min-width: 320px;
@@ -38,12 +42,14 @@ a {
 
 /* APP LAYOUT */
 
+/* Bố cục chính: sidebar bên trái và nội dung bên phải */
 .app-layout {
   display: flex;
   height: 100vh;
   overflow: hidden;
 }
 
+/* Thanh điều hướng bên trái */
 .sidebar {
   width: 280px;
   min-width: 280px;
@@ -56,6 +62,7 @@ a {
   flex-direction: column;
 }
 
+/* Logo hệ thống */
 .sidebar-logo {
   display: flex;
   align-items: center;
@@ -70,6 +77,7 @@ a {
   color: #1e293b;
 }
 
+/* Danh sách menu điều hướng */
 .sidebar-menu {
   display: flex;
   flex-direction: column;
@@ -78,6 +86,7 @@ a {
 }
 /* SIDEBAR USER */
 
+/* Thông tin người dùng ở cuối sidebar */
 .sidebar-user {
   margin-top: auto;
 
@@ -126,6 +135,7 @@ a {
   color: #64748b;
 }
 
+/* Giao diện từng mục menu */
 .menu-item {
   height: 60px;
   display: flex;
@@ -147,6 +157,7 @@ a {
   color: white;
 }
 
+/* Khu vực nội dung bên phải sidebar */
 .app-right {
   flex: 1;
   min-width: 0;
@@ -158,6 +169,7 @@ a {
   overflow: hidden;
 }
 
+/* Thanh trên cùng */
 .topbar {
   height: 70px;
   min-height: 70px;
@@ -167,6 +179,7 @@ a {
   padding: 0 28px;
 }
 
+/*Nút Log out*/
 .logout-button {
   background: #0950f5;
   color: white;
@@ -180,6 +193,7 @@ a {
   background: #1048c5;
 }
 
+/* Khu vực hiển thị nội dung từng trang */
 .main-content {
   flex: 1;
   min-height: 0;
@@ -204,6 +218,7 @@ a {
   flex-direction: column;
 }
 
+/* Lưới hiển thị các thẻ cảm biến */
 .sensor-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -211,6 +226,7 @@ a {
   flex-shrink: 0;
 }
 
+/* Thẻ hiển thị giá trị một cảm biến */
 .sensor-card {
   background: white;
   padding: 20px 22px;
@@ -220,23 +236,24 @@ a {
   box-shadow: 0 5px 20px #153a7a05;
 }
 
+/* Thông tin cảm biến */
 .sensor-card-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
 }
-
+/* Tiêu đề cảm biến */
 .sensor-card h3 {
   font-size: 18px;
   margin: 0 0 5px;
 }
-
+/* Mô tả cảm biến */
 .sensor-card p {
   margin: 0;
   color: #475569;
   font-size: 12px;
 }
-
+/* Biểu tượng cảm biến */
 .sensor-icon {
   width: 38px;
   height: 38px;
@@ -246,7 +263,7 @@ a {
   background: #dce7ff;
   color: #1048c5;
 }
-
+/*Giá trị cảm biến */
 .sensor-number {
   font-size: 42px;
   color: #1048c5;
@@ -254,7 +271,7 @@ a {
   margin-top: 20px;
   line-height: 1;
 }
-
+/* Giá trị cảm biến */
 .sensor-number span {
   font-size: 18px;
   margin-left: 8px;
@@ -262,6 +279,7 @@ a {
   font-weight: 600;
 }
 
+/* Thanh nền thể hiện mức cảm biến */
 .progress-track {
   height: 8px;
   background: #e2eaff;
@@ -270,6 +288,7 @@ a {
   margin-top: 20px;
 }
 
+/* Phần giá trị hiện tại trên thanh mức */
 .progress-fill {
   height: 100%;
   background: #1048c5;
@@ -302,6 +321,7 @@ a {
 
 /* CHART + DEVICES */
 
+/* Khu vực biểu đồ và điều khiển thiết bị */
 .dashboard-bottom {
   flex: 1;
   min-height: 0;
@@ -311,6 +331,7 @@ a {
   margin-top: 18px;
 }
 
+/* Khung biểu đồ và bảng điều khiển LED */
 .chart-card,
 .device-panel {
   background: white;
@@ -340,6 +361,7 @@ a {
   font-size: 20px;
 }
 
+/* Các nút bật/tắt đường dữ liệu trên biểu đồ */
 .chart-filters {
   display: flex;
   gap: 8px;
@@ -353,10 +375,10 @@ a {
   font-size: 11px;
   font-weight: 600;
 }
-
+/*nhãn nhiệt độ_biểu đ*/
 .chart-pill.temp {
   background: #dce7ff;
-  color: #1048c5;
+  color: #6510c5;
 }
 
 .chart-pill.hum {
@@ -380,6 +402,7 @@ a {
   margin-top: 15px;
 }
 
+/* Danh sách các LED */
 .device-list {
   display: flex;
   flex-direction: column;
@@ -391,12 +414,12 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f6f8ff;
+  background: #fffcf6;
   padding: 10px 12px;
   border-radius: 11px;
   min-height: 58px;
 }
-
+/*icon led*/
 .device-icon {
   width: 40px;
   height: 40px;
@@ -430,11 +453,12 @@ a {
   color: #64748b;
 }
 
+/* Công tắc bật/tắt LED */
 .device-switch {
   width: 49px;
   height: 27px;
   border: none;
-  background: #dce7ff;
+  background: #bcadb4;
   border-radius: 20px;
   padding: 4px;
   flex-shrink: 0;
@@ -457,10 +481,12 @@ a {
 .device-switch.on span {
   transform: translateX(22px);
 }
-
+/*Data Sensor*/
 /* FILTERS */
 
+/* Thanh bộ lọc của trang dữ liệu và lịch sử */
 .filter-card,
+/* Bộ lọc trang History, dùng grid để tránh tràn */
 .history-filter {
   display: flex;
   align-items: center;
@@ -476,6 +502,7 @@ a {
   flex-shrink: 0;
 }
 
+/* Ô nhập nội dung tìm kiếm */
 .search-field {
   display: flex;
   align-items: center;
@@ -488,7 +515,7 @@ a {
   height: 55px;
   color: #475569;
 }
-
+/*button search*/
 .search-field input {
   border: none;
   background: transparent;
@@ -496,7 +523,7 @@ a {
   width: 100%;
   color: #1e293b;
 }
-
+/*filter history*/
 .filter-card select,
 .history-filter select {
   height: 55px;
@@ -511,6 +538,7 @@ a {
 
 /* DATA TABLE */
 
+/* Khung chứa bảng dữ liệu */
 .table-card {
   background: white;
   border-radius: 14px;
@@ -532,12 +560,13 @@ a {
   overflow-y: auto;
 }
 
+/* Bảng dữ liệu cảm biến/lịch sử */
 .data-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
-
+/* Bảng tiêu đề */
 .data-table thead {
   background: #f2f6ff;
 
@@ -546,7 +575,7 @@ a {
 
   z-index: 5;
 }
-
+/* Tiêu đề cột */
 .data-table th {
   font-size: 12px;
   letter-spacing: 1px;
@@ -554,18 +583,18 @@ a {
   font-weight: 700;
   padding: 25px 30px;
 }
-
+/* Dữ liệu ô */
 .data-table td {
   padding: 22px 30px;
   font-size: 14px;
   color: #475569;
   white-space: nowrap;
 }
-
+/* Dòng chẵn */
 .data-table tbody tr:nth-child(even) {
   background: #fafbff;
 }
-
+/* Ô thời gian */
 .time-cell {
   display: inline-flex;
   align-items: center;
@@ -583,7 +612,7 @@ a {
   padding-left: 30px;
   padding-right: 30px;
 }
-
+/* Giá trị cảm biến */
 .data-table td.value-column {
   font-weight: 700;
   color: #1e293b;
@@ -595,6 +624,7 @@ a {
   font-weight: 700;
   color: #1e293b !important;
 }
+/* Nhãn phân biệt loại cảm biến */
 .type-badge {
   display: inline-flex;
   align-items: center;
@@ -603,10 +633,10 @@ a {
   font-size: 12px;
   font-weight: 600;
 }
-
+/* Nhãn cảm biến nhiệt độ */
 .type-badge.temperature {
   background: #dce7ff;
-  color: #1048c5;
+  color: #1d3c80;
 }
 
 .type-badge.humidity {
@@ -618,7 +648,7 @@ a {
   background: #ffe1ed;
   color: #be123c;
 }
-
+/* Nhãn hành động */
 .action-badge {
   padding: 6px 14px;
   border-radius: 7px;
@@ -635,13 +665,14 @@ a {
   background: #dce7ff;
   color: #475569;
 }
-
+/* Trạng thái rỗng */
 .empty-state {
   text-align: center;
   padding: 50px !important;
   color: #94a3b8 !important;
 }
 
+/* Chân bảng: số bản ghi và phân trang */
 .table-footer {
   display: flex;
   align-items: center;
@@ -653,12 +684,13 @@ a {
   font-size: 14px;
 }
 
+/* Nhóm nút chuyển trang */
 .pagination {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
+/* Nút chuyển trang */
 .pagination button {
   min-width: 32px;
   height: 34px;
@@ -667,7 +699,7 @@ a {
   background: transparent;
   color: #475569;
 }
-
+/* Nút chuyển trang đang chọn */
 .pagination button.selected {
   background: #1048c5;
   color: white;
@@ -675,6 +707,7 @@ a {
 
 /* PROFILE */
 
+/* Bố cục trang hồ sơ */
 .profile-page {
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
@@ -682,6 +715,7 @@ a {
   align-items: start;
 }
 
+/* Thẻ hồ sơ */
 .profile-card {
   background: white;
   border-radius: 15px;
@@ -711,7 +745,7 @@ a {
   margin: 5px 0;
   font-size: 13px;
 }
-
+/* Nhãn chuyên ngành */
 .major-badge {
   display: inline-block;
   padding: 5px 20px;
@@ -721,7 +755,7 @@ a {
   font-size: 12px;
   font-weight: 700;
 }
-
+/* Thông tin chi tiết hồ sơ */
 .profile-details {
   display: flex;
   flex-direction: column;
@@ -734,7 +768,7 @@ a {
   gap: 15px;
   align-items: flex-start;
 }
-
+/* Biểu tượng chi tiết hồ sơ */
 .profile-detail > svg {
   box-sizing: content-box;
   padding: 10px;
@@ -767,13 +801,13 @@ a {
   margin: 0 0 35px;
   font-size: 23px;
 }
-
+/* nhãn cảm biến nhiệt độ */
 .resources-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 25px;
 }
-
+/* Thẻ tài nguyên */
 .resource-card {
   background: white;
   border-radius: 15px;
@@ -1017,6 +1051,7 @@ a.resource-card:hover {
    LOGIN PAGE
 ========================================= */
 
+/* Trang đăng nhập */
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -1234,6 +1269,7 @@ a.resource-card:hover {
 ========================================= */
 
 /* Card khi cảm biến vượt ngưỡng */
+/* Cảnh báo khi giá trị cảm biến vượt ngưỡng */
 .sensor-card-warning {
   border: 1px solid #fecaca;
   background: #fffafa;
@@ -1271,6 +1307,7 @@ a.resource-card:hover {
   font-weight: 700;
 }
 /* Nút Clear All cùng format với bộ lọc */
+/* Nút xóa toàn bộ điều kiện lọc */
 .clear-filter-button {
   height: 55px;
   padding: 0 20px;
@@ -1302,19 +1339,807 @@ a.resource-card:hover {
 }
 /* USER TRONG HISTORY */
 
+/* Thông tin người thao tác trong lịch sử */
 .history-user {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
+/* Thông tin người thao tác trong lịch sử */
 .history-user strong {
   font-size: 13px;
   font-weight: 600;
   color: #1e293b;
 }
-
+/* Thông tin người thao tác trong lịch sử */
 .history-user span {
   font-size: 11px;
   color: #94a3b8;
+}
+/* =========================================
+   TURN ALL LED
+========================================= */
+
+/* Khu vực điều khiển các LED */
+.device-control-wrapper {
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  position: relative;
+}
+
+/* Khu vực nút bật/tắt tất cả */
+.all-device-actions {
+  position: absolute;
+
+  top: 15px;
+  right: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  z-index: 10;
+}
+
+/* Nút bật/tắt tất cả */
+.all-device-button {
+  border: none;
+  border-radius: 7px;
+
+  padding: 7px 10px;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+/* Bật tất cả */
+.all-device-button.on {
+  background: #1048c5;
+  color: white;
+}
+
+.all-device-button.on:hover {
+  background: #0b3da8;
+}
+
+/* Tắt tất cả */
+.all-device-button.off {
+  background: #e5edff;
+  color: #1048c5;
+}
+
+.all-device-button.off:hover {
+  background: #d5e1ff;
+}
+
+/* Device Control chiếm toàn bộ vùng */
+.device-control-wrapper .device-panel {
+  width: 100%;
+  height: 100%;
+}
+/* =========================================
+   SEARCH TIME
+========================================= */
+
+/* Ô tìm kiếm thời gian và nút mở lịch */
+.time-search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Chừa chỗ cho icon bên phải */
+.time-search-field > input[type="text"] {
+  padding-right: 50px;
+}
+
+/* Icon chọn ngày + giờ */
+.datetime-picker-button {
+  position: absolute;
+  right: 9px;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 7px;
+
+  background: transparent;
+  color: #64748b;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.datetime-picker-button:hover {
+  background: #e8eeff;
+  color: #1048c5;
+}
+
+/* Input datetime chỉ dùng để mở picker */
+.hidden-datetime-input {
+  position: absolute;
+
+  right: 0;
+
+  width: 1px !important;
+  height: 1px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+/* =========================================
+   TABLE FOOTER
+========================================= */
+
+.table-footer-right {
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+}
+
+/* =========================================
+   ROWS PER PAGE
+========================================= */
+
+/* Chọn số dòng hiển thị trên mỗi trang */
+.page-size-control {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+/* Nhãn số dòng hiển thị trên mỗi trang */
+.page-size-control span {
+  font-size: 13px;
+
+  color: #64748b;
+
+  white-space: nowrap;
+}
+/* Select box cho số dòng hiển thị trên mỗi trang */
+.page-size-control select {
+  width: 70px;
+  height: 34px;
+
+  padding: 0 8px;
+
+  border: 1px solid #dce5f5;
+  border-radius: 7px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #1e293b;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.page-size-control select:focus {
+  border-color: #1048c5;
+}
+/* =========================================
+   TURN ALL PENDING
+========================================= */
+
+.all-device-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+}
+
+.all-device-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.all-device-button.pending {
+  min-width: 105px;
+}
+
+/* Loading spinner */
+.button-spinner {
+  width: 13px;
+  height: 13px;
+
+  flex-shrink: 0;
+
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+
+  border-radius: 50%;
+
+  animation: button-spin 0.7s linear infinite;
+}
+
+/* Spinner của Turn All Off */
+.all-device-button.off .button-spinner {
+  border-color: rgba(16, 72, 197, 0.25);
+  border-top-color: #1048c5;
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* =========================================
+   CUSTOM DATE TIME PICKER
+========================================= */
+
+/* Khung chứa bộ chọn ngày giờ */
+.datetime-picker-wrapper {
+  position: relative;
+}
+
+/* Popup chọn ngày, giờ, phút, giây */
+.custom-datetime-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+
+  width: 505px;
+
+  display: grid;
+  grid-template-columns: 250px 1fr;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
+
+  z-index: 1000;
+}
+
+/* ================= CALENDAR ================= */
+
+/* Phần lịch chọn ngày */
+.picker-calendar {
+  padding: 14px 12px 8px;
+
+  border-right: 1px solid #edf0f5;
+}
+
+.picker-calendar-header {
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 8px;
+}
+
+.picker-calendar-header strong {
+  font-size: 13px;
+  color: #111827;
+}
+
+.picker-calendar-header > div {
+  display: flex;
+  gap: 4px;
+}
+
+.picker-calendar-header button {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #334155;
+
+  cursor: pointer;
+}
+
+.picker-calendar-header button:hover {
+  background: #f1f5f9;
+  border-radius: 5px;
+}
+
+/* Week */
+
+.picker-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+
+  margin-bottom: 4px;
+}
+
+.picker-weekdays span {
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 12px;
+  color: #111827;
+}
+
+/* Days */
+
+.picker-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.picker-day {
+  height: 31px;
+
+  padding: 0;
+
+  border: none;
+  border-radius: 3px;
+
+  background: transparent;
+
+  color: #111827;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.picker-day:hover {
+  background: #eef2f7;
+}
+
+.picker-day.other-month {
+  color: #94a3b8;
+}
+
+.picker-day.selected {
+  background: #52525b;
+  color: #ffffff;
+}
+
+/* =========================================
+   TIME
+========================================= */
+
+/* Phần chọn thời gian */
+.picker-time {
+  min-height: 245px;
+
+  padding: 14px 12px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+
+  gap: 5px;
+}
+
+.time-column {
+  width: 49px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 5px;
+}
+
+.time-column button {
+  width: 100%;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.time-column button:hover {
+  background: #f1f5f9;
+}
+
+.time-column strong {
+  width: 100%;
+  height: 37px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #d4d4d8;
+
+  color: #111827;
+
+  font-size: 13px;
+}
+
+.time-separator {
+  margin-top: 40px;
+
+  color: #64748b;
+
+  font-weight: 600;
+}
+
+.time-period {
+  margin-left: 3px;
+  margin-top: 33px;
+}
+
+.time-period button {
+  height: 37px;
+
+  padding: 0 13px;
+
+  border: none;
+
+  background: #d4d4d8;
+
+  color: #111827;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+
+/* Các nút Clear, Today và OK của DateTime Picker */
+.picker-footer {
+  grid-column: 1 / -1;
+
+  min-height: 51px;
+
+  padding: 8px 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-top: 1px solid #edf0f5;
+}
+
+.picker-footer-right {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.picker-clear,
+.picker-today {
+  padding: 7px 10px;
+
+  border: none;
+  background: transparent;
+
+  color: #0067e5;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.picker-clear:hover,
+.picker-today:hover {
+  background: #eff6ff;
+
+  border-radius: 5px;
+}
+
+.picker-ok {
+  height: 32px;
+
+  padding: 0 17px;
+
+  border: none;
+  border-radius: 5px;
+
+  background: #1048c5;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.picker-ok:hover {
+  background: #0b3da8;
+}
+/* =========================================
+   TIME WHEEL PICKER
+========================================= */
+
+.picker-time {
+  height: 245px;
+  padding: 14px 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  overflow: hidden;
+}
+
+/* Mỗi cột: giờ / phút / giây / AM-PM */
+/* Khung cuộn chọn giờ/phút/giây/AM-PM */
+.scroll-time-wrapper {
+  position: relative;
+
+  width: 52px;
+  height: 190px;
+
+  overflow: hidden;
+}
+
+/* Vùng cuộn */
+.scroll-time-column {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  height: 190px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scroll-snap-type: y mandatory;
+  overscroll-behavior: contain;
+
+  scrollbar-width: none;
+}
+
+.scroll-time-column::-webkit-scrollbar {
+  display: none;
+}
+
+/* Khoảng trống trên/dưới để item có thể vào giữa */
+.scroll-time-spacer {
+  height: 76px;
+}
+
+/* Giá trị */
+.scroll-time-item {
+  width: 100%;
+  height: 38px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  color: #64748b;
+
+  font-size: 13px;
+
+  cursor: pointer;
+
+  scroll-snap-align: center;
+}
+
+.scroll-time-item:hover {
+  color: #1048c5;
+}
+
+.scroll-time-item.selected {
+  color: #111827;
+  font-weight: 700;
+}
+
+/* Highlight vùng đang chọn */
+.scroll-time-selection {
+  position: absolute;
+
+  top: 76px;
+  left: 0;
+
+  width: 100%;
+  height: 38px;
+
+  border-radius: 2px;
+
+  background: rgba(203, 213, 225, 0.55);
+
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+/* Dấu : */
+.time-wheel-separator {
+  width: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+
+  font-weight: 700;
+}
+/* =========================================
+   FIX HISTORY FILTER - KHÔNG TRÀN CLEAR ALL
+========================================= */
+
+.history-filter {
+  display: grid;
+
+  grid-template-columns:
+    minmax(240px, 2fr)
+    minmax(125px, 1fr)
+    minmax(110px, 1fr)
+    minmax(125px, 1fr)
+    minmax(145px, 1fr)
+    90px;
+
+  align-items: center;
+
+  gap: 14px;
+
+  width: 100%;
+
+  padding: 18px 24px;
+
+  box-sizing: border-box;
+}
+
+/* Cho phép các thành phần co lại */
+.history-filter > * {
+  min-width: 0;
+}
+
+/* Search */
+.history-filter .datetime-picker-wrapper {
+  width: 100%;
+  min-width: 0;
+}
+
+.history-filter .search-field {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Các select */
+.history-filter select {
+  width: 100%;
+
+  /* Ghi đè min-width: 190px cũ */
+  min-width: 0;
+}
+
+/* Clear All */
+.history-filter .clear-filter-button {
+  width: 90px;
+  min-width: 90px;
+
+  padding: 0 10px;
+
+  white-space: nowrap;
+}
+
+/* =========================================
+   RESPONSIVE HISTORY FILTER
+========================================= */
+
+@media (max-width: 1250px) {
+  .history-filter {
+    grid-template-columns:
+      minmax(240px, 2fr)
+      repeat(2, minmax(130px, 1fr));
+  }
+
+  .history-filter .clear-filter-button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 800px) {
+  .history-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .history-filter .clear-filter-button {
+    width: 100%;
+  }
+}
+/* SEARCH BUTTON */
+/* Nút Search: chỉ lọc sau khi người dùng xác nhận */
+.sensor-search-button {
+  height: 55px;
+  min-width: 120px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 0 20px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #0950f5;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  box-shadow: 0 4px 12px rgba(9, 80, 245, 0.15);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.sensor-search-button:hover:not(:disabled) {
+  background: #1048c5;
+
+  box-shadow: 0 6px 16px rgba(9, 80, 245, 0.22);
+
+  transform: translateY(-1px);
+}
+
+.sensor-search-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.sensor-search-button:disabled {
+  background: #cbd5e1;
+  color: #ffffff;
+
+  box-shadow: none;
+
+  opacity: 1;
+  cursor: not-allowed;
 }
