@@ -1,459 +1,360 @@
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+
 import {
   Search,
-  CalendarClock,
   CalendarDays,
+  CalendarClock,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
-  ChevronDown,
+  X,
+  Database,
+  Copy,
+  Check,
 } from "lucide-react";
 
-const sensorTypes = [
-  { key: "temperature", label: "Temp", unit: "°C" },
-  { key: "humidity", label: "Hum", unit: "%" },
-  { key: "light", label: "Light", unit: "lux" },
-];
+import "../styles/iot-pages.css";
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+// ========================================
+// 1. CẤU HÌNH CẢM BIẾN
+// ========================================
 
-const HOURS = Array.from({ length: 12 }, (_, index) => index + 1);
-const MINUTES = Array.from({ length: 60 }, (_, index) => index);
-const SECONDS = Array.from({ length: 60 }, (_, index) => index);
-const PERIODS = ["AM", "PM"];
+const SENSOR_TYPES = {
+  temperature: {
+    label: "Temp",
+    unit: "°C",
+    className: "temperature",
+  },
+  humidity: {
+    label: "Hum",
+    unit: "%",
+    className: "humidity",
+  },
+  light: {
+    label: "Light",
+    unit: "ADC",
+    className: "light",
+  },
+};
 
-// Định dạng thời gian hiển thị
-function formatDateTime(timestamp) {
+// ========================================
+// 2. XỬ LÝ THỜI GIAN
+// ========================================
+
+// Chuyển dữ liệu Backend thành timestamp
+function toTimestamp(value) {
+  if (value === null || value === undefined || value === "") {
+    return NaN;
+  }
+
+  if (typeof value === "number") {
+    return value;
+  }
+
+  return new Date(value).getTime();
+}
+
+// Định dạng: yyyy/MM/dd HH:mm:ss
+function formatDateTime(value) {
+  const timestamp = toTimestamp(value);
+
+  if (!Number.isFinite(timestamp)) {
+    return "--";
+  }
+
   const date = new Date(timestamp);
 
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const pad = (number) =>
+    String(number).padStart(2, "0");
 
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
   const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
 
-  return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
+  const hour = pad(date.getHours());
+  const minute = pad(date.getMinutes());
+  const second = pad(date.getSeconds());
+
+  return `${year}/${month}/${day} ${hour}:${minute}:${second}`;
 }
 
-// Tạo danh sách ngày cho lịch
-function getCalendarDays(year, month) {
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const daysInPreviousMonth = new Date(year, month, 0).getDate();
+// Đổi giá trị datetime-local thành định dạng hiển thị
+function formatInputTime(value) {
+  if (!value) return "";
 
-  const days = [];
+  const timestamp = new Date(value).getTime();
 
-  for (let i = firstDay - 1; i >= 0; i--) {
-    days.push({
-      day: daysInPreviousMonth - i,
-      monthOffset: -1,
-    });
+  if (!Number.isFinite(timestamp)) {
+    return "";
   }
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    days.push({
-      day,
-      monthOffset: 0,
-    });
-  }
-
-  let nextDay = 1;
-
-  while (days.length < 42) {
-    days.push({
-      day: nextDay,
-      monthOffset: 1,
-    });
-
-    nextDay++;
-  }
-
-  return days;
+  return formatDateTime(timestamp);
 }
 
-// Cột cuộn chọn giờ, phút, giây
-function ScrollColumn({
-  values,
-  value,
-  onChange,
-  formatValue = (item) => String(item).padStart(2, "0"),
-}) {
-  const containerRef = useRef(null);
-  const scrollTimerRef = useRef(null);
+// ========================================
+// 3. COMPONENT DATA SENSOR
+// ========================================
 
-  const ITEM_HEIGHT = 38;
-
-  useEffect(() => {
-    const index = values.indexOf(value);
-
-    if (containerRef.current && index >= 0) {
-      containerRef.current.scrollTop = index * ITEM_HEIGHT;
-    }
-  }, [value, values]);
-
-  const handleScroll = () => {
-    if (!containerRef.current) return;
-
-    if (scrollTimerRef.current) {
-      clearTimeout(scrollTimerRef.current);
-    }
-
-    scrollTimerRef.current = setTimeout(() => {
-      if (!containerRef.current) return;
-
-      const index = Math.round(
-        containerRef.current.scrollTop / ITEM_HEIGHT
-      );
-
-      const safeIndex = Math.max(
-        0,
-        Math.min(index, values.length - 1)
-      );
-
-      onChange(values[safeIndex]);
-
-      containerRef.current.scrollTo({
-        top: safeIndex * ITEM_HEIGHT,
-        behavior: "smooth",
-      });
-    }, 100);
-  };
-
-  const handleSelect = (item) => {
-    const index = values.indexOf(item);
-
-    onChange(item);
-
-    containerRef.current?.scrollTo({
-      top: index * ITEM_HEIGHT,
-      behavior: "smooth",
-    });
-  };
-
-  return (
-    <div className="scroll-time-wrapper">
-      <div
-        ref={containerRef}
-        className="scroll-time-column"
-        onScroll={handleScroll}
-      >
-        <div className="scroll-time-spacer" />
-
-        {values.map((item) => (
-          <button
-            type="button"
-            key={item}
-            className={`scroll-time-item ${
-              item === value ? "selected" : ""
-            }`}
-            onClick={() => handleSelect(item)}
-          >
-            {formatValue(item)}
-          </button>
-        ))}
-
-        <div className="scroll-time-spacer" />
-      </div>
-
-      <div className="scroll-time-selection" />
-    </div>
-  );
-}
-
-export default function DataSensor({ records }) {
-  // Trạng thái bộ lọc
-  const [searchInput, setSearchInput] = useState("");
-  const [appliedSearch, setAppliedSearch] = useState("");
+export default function DataSensor({ records = [] }) {
+  // Loại dữ liệu tìm kiếm
   const [type, setType] = useState("all");
-  // Loại lọc thực tế sau khi bấm Search
-  const [appliedType, setAppliedType] = useState("all");
 
-  // Sắp xếp mặc định: mới nhất trước
+  // Nội dung đang nhập
+  const [searchInput, setSearchInput] = useState("");
+
+  // Điều kiện thực sự áp dụng sau khi nhấn Search
+  const [appliedType, setAppliedType] = useState("all");
+  const [appliedSearch, setAppliedSearch] = useState("");
+
+  // Sắp xếp
   const [sortOrder, setSortOrder] = useState("desc");
 
-  // Trạng thái phân trang
+  // Phân trang
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Trạng thái bộ chọn ngày giờ
+  // Bộ chọn ngày giờ
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedDateTime, setSelectedDateTime] = useState("");
 
-  const now = new Date();
+  // ID của dòng vừa sao chép
+  const [copiedId, setCopiedId] = useState(null);
 
-  const [pickerYear, setPickerYear] = useState(now.getFullYear());
-  const [pickerMonth, setPickerMonth] = useState(now.getMonth());
-  const [pickerDay, setPickerDay] = useState(now.getDate());
+  // ========================================
+  // 4. XỬ LÝ TÌM KIẾM
+  // ========================================
 
-  const [pickerHour, setPickerHour] = useState(
-    now.getHours() % 12 || 12
-  );
-
-  const [pickerMinute, setPickerMinute] = useState(
-    now.getMinutes()
-  );
-
-  const [pickerSecond, setPickerSecond] = useState(
-    now.getSeconds()
-  );
-
-  const [pickerPeriod, setPickerPeriod] = useState(
-    now.getHours() >= 12 ? "PM" : "AM"
-  );
-
-  const pickerRef = useRef(null);
-
-  // Đóng lịch khi click ra ngoài
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(event.target)
-      ) {
-        setPickerOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const calendarDays = getCalendarDays(
-    pickerYear,
-    pickerMonth
-  );
-
-  // Mở hoặc đóng lịch
-  const handleOpenPicker = () => {
-    setPickerOpen((prev) => !prev);
-  };
-
-  // Chuyển về tháng trước
-  const handlePreviousMonth = () => {
-    if (pickerMonth === 0) {
-      setPickerMonth(11);
-      setPickerYear((prev) => prev - 1);
-    } else {
-      setPickerMonth((prev) => prev - 1);
-    }
-  };
-
-  // Chuyển sang tháng sau
-  const handleNextMonth = () => {
-    if (pickerMonth === 11) {
-      setPickerMonth(0);
-      setPickerYear((prev) => prev + 1);
-    } else {
-      setPickerMonth((prev) => prev + 1);
-    }
-  };
-
-  // Chọn ngày trên lịch
-  const handleSelectDay = (item) => {
-    if (item.monthOffset === -1) {
-      const date = new Date(
-        pickerYear,
-        pickerMonth - 1,
-        item.day
-      );
-
-      setPickerYear(date.getFullYear());
-      setPickerMonth(date.getMonth());
-      setPickerDay(date.getDate());
-
-      return;
-    }
-
-    if (item.monthOffset === 1) {
-      const date = new Date(
-        pickerYear,
-        pickerMonth + 1,
-        item.day
-      );
-
-      setPickerYear(date.getFullYear());
-      setPickerMonth(date.getMonth());
-      setPickerDay(date.getDate());
-
-      return;
-    }
-
-    setPickerDay(item.day);
-  };
-
-  // Chọn thời gian hiện tại
-  const handleToday = () => {
-    const today = new Date();
-
-    setPickerYear(today.getFullYear());
-    setPickerMonth(today.getMonth());
-    setPickerDay(today.getDate());
-
-    setPickerHour(today.getHours() % 12 || 12);
-    setPickerMinute(today.getMinutes());
-    setPickerSecond(today.getSeconds());
-
-    setPickerPeriod(
-      today.getHours() >= 12 ? "PM" : "AM"
-    );
-  };
-
-  // Xóa thời gian đã chọn
-  const handleClearDate = () => {
-    setSearchInput("");
+  function resetSearch() {
+    setAppliedType("all");
     setAppliedSearch("");
     setPage(1);
+  }
+
+  function handleTypeChange(event) {
+    setType(event.target.value);
+    setSearchInput("");
+    setSelectedDateTime("");
     setPickerOpen(false);
-  };
 
-  // Xác nhận ngày giờ đã chọn
-  const handleConfirmDateTime = () => {
-    let hour24 = pickerHour;
+    resetSearch();
+  }
 
-    if (pickerPeriod === "AM" && pickerHour === 12) {
-      hour24 = 0;
+  function handleInputChange(event) {
+    const value = event.target.value;
+
+    setSearchInput(value);
+
+    // Xóa hết từ khóa thì trả về toàn bộ dữ liệu
+    if (!value.trim()) {
+      resetSearch();
+      setSelectedDateTime("");
     }
+  }
 
-    if (pickerPeriod === "PM" && pickerHour !== 12) {
-      hour24 = pickerHour + 12;
-    }
-
-    const selectedDate = new Date(
-      pickerYear,
-      pickerMonth,
-      pickerDay,
-      hour24,
-      pickerMinute,
-      pickerSecond
-    );
-
-    const selectedValue = formatDateTime(selectedDate.getTime());
-
-    // Đưa thời gian vào ô nhập, chưa lọc dữ liệu
-    setSearchInput(selectedValue);
-
-    // Đóng lịch sau khi xác nhận
-    setPickerOpen(false);
-  };
-
-  // Áp dụng bộ lọc khi bấm Search
-  const handleSearch = () => {
+  function handleSearch() {
     const keyword = searchInput.trim();
 
-    // Không tìm kiếm khi ô nhập trống
-    if (keyword === "") return;
+    if (!keyword) {
+      resetSearch();
+      setPickerOpen(false);
+      return;
+    }
 
     setAppliedType(type);
     setAppliedSearch(keyword);
-    setPage(1);
-  };
-
-  const handleSearchKeyDown = (event) => {
-    if (event.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  // Xóa toàn bộ bộ lọc
-  const handleClearAll = () => {
-    setSearchInput("");
-    setAppliedSearch("");
-    setType("all");
-    setAppliedType("all");
-    setSortOrder("desc");
 
     setPage(1);
     setPickerOpen(false);
-  };
+  }
 
-  // Chuyển dữ liệu cảm biến thành các dòng bảng
-  const rows = records.flatMap((record) =>
-    sensorTypes.map((sensor, index) => ({
-      id: record.timestamp * 10 + index,
-      timestamp: record.timestamp,
-      type: sensor.key,
-      label: sensor.label,
-      value: record[sensor.key],
-      unit: sensor.unit,
-    }))
-  );
+  function handleSearchKeyDown(event) {
+    if (event.key === "Enter") {
+      handleSearch();
+    }
+  }
 
-  // Lọc và sắp xếp dữ liệu
-  const filtered = rows
-    .filter((item) => {
-      const date = formatDateTime(item.timestamp);
+  function handleClearAll() {
+    setType("all");
+    setSearchInput("");
 
-      const keyword = appliedSearch.trim().toLowerCase();
+    setAppliedType("all");
+    setAppliedSearch("");
 
-      // Chưa có từ khóa thì hiển thị tất cả
-      if (keyword === "") {
-        return true;
-      }
+    setSortOrder("desc");
+    setPage(1);
 
-      // All: tìm theo thời gian, loại và giá trị
-      if (appliedType === "all") {
-        return (
-          date.toLowerCase().includes(keyword) ||
-          item.label.toLowerCase().includes(keyword) ||
-          item.type.toLowerCase().includes(keyword) ||
-          `${item.value}`.toLowerCase().includes(keyword) ||
-          `${item.value} ${item.unit}`.toLowerCase().includes(keyword)
-        );
-      }
+    setPickerOpen(false);
+    setSelectedDateTime("");
+  }
 
-      // Time: tìm theo cột thời gian
-      if (appliedType === "time") {
-        return date.toLowerCase().includes(keyword);
-      }
+  // ========================================
+  // 5. BỘ CHỌN NGÀY GIỜ
+  // ========================================
 
-      // Cảm biến: lọc đúng loại và giá trị
-      return (
-        item.type === appliedType &&
-        (
-          `${item.value}`.toLowerCase().includes(keyword) ||
-          `${item.value} ${item.unit}`.toLowerCase().includes(keyword)
-        )
+  function handleConfirmDateTime() {
+    const formatted = formatInputTime(selectedDateTime);
+
+    if (!formatted) return;
+
+    // Chỉ nhập thời gian vào ô Search
+    // Người dùng nhấn Search để thực hiện lọc
+    setSearchInput(formatted);
+
+    setPickerOpen(false);
+  }
+
+  // ========================================
+  // 6. COPY THỜI GIAN
+  // ========================================
+
+  async function handleCopyTime(timestamp, rowId) {
+    const text = formatDateTime(timestamp);
+
+    if (text === "--") return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+
+      // Đổi icon Copy thành Check
+      setCopiedId(rowId);
+
+      // Không cần alert, không làm gián đoạn thao tác
+    } catch (error) {
+      console.error("Không thể sao chép thời gian:", error);
+    }
+  }
+
+  // ========================================
+  // 7. CHUẨN HÓA DỮ LIỆU
+  // ========================================
+
+  const rows = useMemo(() => {
+    const source = Array.isArray(records) ? records : [];
+
+    return source
+      .map((record, index) => {
+        const recordType = String(
+          record.type ?? ""
+        ).toLowerCase();
+
+        const sensorInfo = SENSOR_TYPES[recordType];
+
+        const rawTime =
+          record.timestamp ?? record.time;
+
+        return {
+          id:
+            record.id ??
+            record.datasensorId ??
+            record.dataSensorId ??
+            record.datasensor_id ??
+            index,
+
+          type: recordType,
+
+          label: sensorInfo?.label ?? recordType,
+
+          value: Number(record.value),
+
+          unit: sensorInfo?.unit ?? "",
+
+          className: sensorInfo?.className ?? "",
+
+          timestamp: toTimestamp(rawTime),
+        };
+      })
+      .filter(
+        (item) =>
+          Number.isFinite(item.timestamp) &&
+          Number.isFinite(item.value)
       );
-    })
-    .sort((a, b) => {
-      if (sortOrder === "asc") {
-        return a.timestamp - b.timestamp;
-      }
+  }, [records]);
 
-      return b.timestamp - a.timestamp;
-    });
+  // ========================================
+  // 8. LỌC VÀ SẮP XẾP DỮ LIỆU
+  // ========================================
 
-  // Trạng thái phân trang
+  const filtered = useMemo(() => {
+    const keyword = appliedSearch.trim().toLowerCase();
+
+    return rows
+      .filter((row) => {
+        if (!keyword) {
+          return true;
+        }
+
+        const timeText = formatDateTime(
+          row.timestamp
+        ).toLowerCase();
+
+        const valueText = String(
+          row.value
+        ).toLowerCase();
+
+        const sensorType = row.type.toLowerCase();
+
+        const sensorLabel = row.label.toLowerCase();
+
+        const valueWithUnit =
+          `${row.value} ${row.unit}`.toLowerCase();
+
+        // Tìm kiếm tất cả trường
+        if (appliedType === "all") {
+          return (
+            timeText.includes(keyword) ||
+            sensorType.includes(keyword) ||
+            sensorLabel.includes(keyword) ||
+            valueText.includes(keyword) ||
+            valueWithUnit.includes(keyword)
+          );
+        }
+
+        // Tìm kiếm theo thời gian
+        if (appliedType === "time") {
+          return timeText.includes(keyword);
+        }
+
+        // Tìm theo loại cảm biến và giá trị
+        return (
+          sensorType === appliedType &&
+          (
+            valueText.includes(keyword) ||
+            valueWithUnit.includes(keyword)
+          )
+        );
+      })
+      .sort((a, b) => {
+        const timeDifference =
+          a.timestamp - b.timestamp;
+
+        const idDifference =
+          Number(a.id) - Number(b.id);
+
+        return sortOrder === "asc"
+          ? timeDifference || idDifference
+          : -timeDifference || -idDifference;
+      });
+  }, [rows, appliedType, appliedSearch, sortOrder]);
+
+  // ========================================
+  // 9. PHÂN TRANG
+  // ========================================
+
   const totalPages = Math.max(
     1,
     Math.ceil(filtered.length / pageSize)
   );
 
-  const currentPage = Math.min(page, totalPages);
+  const currentPage = Math.min(
+    Math.max(page, 1),
+    totalPages
+  );
 
   const displayed = filtered.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
-  const visiblePages = Array.from(
+  const pageNumbers = Array.from(
     { length: totalPages },
     (_, index) => index + 1
   ).filter(
@@ -463,384 +364,392 @@ export default function DataSensor({ records }) {
       Math.abs(number - currentPage) <= 1
   );
 
+  const hasFilters =
+    searchInput.trim() !== "" ||
+    appliedSearch.trim() !== "" ||
+    type !== "all" ||
+    appliedType !== "all" ||
+    sortOrder !== "desc";
+
+  // ========================================
+  // 10. GIAO DIỆN
+  // ========================================
+
   return (
-    <div className="data-page">
-      <h1 className="page-title">
-        Data Sensor
-      </h1>
+    <div className="iot-data-page">
+      {/* TIÊU ĐỀ */}
 
-      {/* Bộ lọc dữ liệu */}
-      <div className="filter-card">
+      <div className="iot-page-heading">
+        <div>
+          <h1>Data Sensor</h1>
+        </div>
 
-        {/* Chọn loại dữ liệu cần tìm */}
-        <select
-          value={type}
-          onChange={(e) => {
-            // Đổi loại tìm kiếm, chưa lọc dữ liệu
-            setType(e.target.value);
-            setSearchInput("");
-            setPickerOpen(false);
-          }}
-        >
-          <option value="all">All</option>
-          <option value="time">Time</option>
-          <option value="temperature">Temperature</option>
-          <option value="humidity">Humidity</option>
-          <option value="light">Light</option>
-        </select>
+        <div className="iot-record-count">
+          <Database size={17} />
+          {rows.length} records loaded
+        </div>
+      </div>
 
-        {/* Nhập nội dung tìm kiếm */}
-        <div
-          className="datetime-picker-wrapper data-sensor-search-wrapper"
-          ref={pickerRef}
-        >
-          <div className="search-field time-search-field">
-            <Search size={20} />
+      {/* BỘ LỌC */}
 
-            <input
-              type={
-                type === "temperature" ||
-                type === "humidity" ||
-                type === "light"
-                  ? "number"
-                  : "text"
-              }
-              step="any"
-              placeholder={
-                type === "time"
-                  ? "Enter time..."
-                  : type === "temperature"
-                  ? "Enter temperature value..."
-                  : type === "humidity"
-                  ? "Enter humidity value..."
-                  : type === "light"
-                  ? "Enter light value..."
-                  : "Enter search content..."
-              }
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-            />
+      <div className="iot-filter-panel">
+        <div className="iot-filter-grid">
+          {/* SEARCH BY */}
 
-            {type === "time" && (
-              <button
-                type="button"
-                className="datetime-picker-button"
-                onClick={handleOpenPicker}
-                title="Select date and time"
-              >
-                <CalendarClock size={19} />
-              </button>
+          <div className="iot-filter-field iot-filter-type">
+            <label htmlFor="sensor-filter-type">
+              Search by
+            </label>
+
+            <select
+              id="sensor-filter-type"
+              value={type}
+              onChange={handleTypeChange}
+            >
+              <option value="all">All</option>
+              <option value="time">Time</option>
+              <option value="temperature">
+                Temperature
+              </option>
+              <option value="humidity">
+                Humidity
+              </option>
+              <option value="light">
+                Light
+              </option>
+            </select>
+          </div>
+
+          {/* SEARCH CONTENT */}
+
+          <div className="iot-filter-field iot-filter-search">
+            <label htmlFor="sensor-filter-keyword">
+              Search content
+            </label>
+
+            <div className="iot-search-input">
+              <Search size={18} />
+
+              <input
+                id="sensor-filter-keyword"
+                type={
+                  [
+                    "temperature",
+                    "humidity",
+                    "light",
+                  ].includes(type)
+                    ? "number"
+                    : "text"
+                }
+                step="any"
+                placeholder={
+                  type === "time"
+                    ? "yyyy/MM/dd HH:mm:ss"
+                    : type === "all"
+                    ? "Enter search content..."
+                    : "Enter measured value..."
+                }
+                value={searchInput}
+                onChange={handleInputChange}
+                onKeyDown={handleSearchKeyDown}
+              />
+
+              {type === "time" && (
+                <button
+                  type="button"
+                  className="iot-calendar-trigger"
+                  onClick={() =>
+                    setPickerOpen((current) => !current)
+                  }
+                  title="Choose date and time"
+                >
+                  <CalendarClock size={19} />
+                </button>
+              )}
+            </div>
+
+            {/* POPUP CHỌN NGÀY GIỜ */}
+
+            {type === "time" && pickerOpen && (
+              <div className="iot-date-popup">
+                <label>Select date and time</label>
+
+                <input
+                  type="datetime-local"
+                  step="1"
+                  value={selectedDateTime}
+                  onChange={(event) =>
+                    setSelectedDateTime(
+                      event.target.value
+                    )
+                  }
+                />
+
+                <div className="iot-date-actions">
+                  <button
+                    type="button"
+                    onClick={() => setPickerOpen(false)}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={handleConfirmDateTime}
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
-          {type === "time" && pickerOpen && (
-            <div className="custom-datetime-picker">
-              <div className="picker-calendar">
-                <div className="picker-calendar-header">
-                  <strong>
-                    {MONTH_NAMES[pickerMonth]} {pickerYear}
-                  </strong>
+          {/* SORT BY */}
 
-                  <div>
-                    <button
-                      type="button"
-                      onClick={handlePreviousMonth}
-                      title="Previous month"
-                    >
-                      <ChevronUp size={19} />
-                    </button>
+          <div className="iot-filter-field iot-filter-sort">
+            <label htmlFor="sensor-sort">
+              Sort by
+            </label>
 
-                    <button
-                      type="button"
-                      onClick={handleNextMonth}
-                      title="Next month"
-                    >
-                      <ChevronDown size={19} />
-                    </button>
-                  </div>
-                </div>
+            <select
+              id="sensor-sort"
+              value={sortOrder}
+              onChange={(event) => {
+                setSortOrder(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="desc">
+                Newest First
+              </option>
 
-                <div className="picker-weekdays">
-                  <span>Su</span><span>Mo</span><span>Tu</span><span>We</span>
-                  <span>Th</span><span>Fr</span><span>Sa</span>
-                </div>
+              <option value="asc">
+                Oldest First
+              </option>
+            </select>
+          </div>
 
-                <div className="picker-days">
-                  {calendarDays.map((item, index) => (
-                    <button
-                      type="button"
-                      key={`${item.monthOffset}-${item.day}-${index}`}
-                      className={[
-                        "picker-day",
-                        item.monthOffset !== 0 ? "other-month" : "",
-                        item.monthOffset === 0 && item.day === pickerDay
-                          ? "selected"
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      onClick={() => handleSelectDay(item)}
-                    >
-                      {item.day}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {/* SEARCH BUTTON */}
 
-              <div className="picker-time">
-                <ScrollColumn
-                  values={HOURS}
-                  value={pickerHour}
-                  onChange={setPickerHour}
-                />
-                <span className="time-wheel-separator">:</span>
-                <ScrollColumn
-                  values={MINUTES}
-                  value={pickerMinute}
-                  onChange={setPickerMinute}
-                />
-                <span className="time-wheel-separator">:</span>
-                <ScrollColumn
-                  values={SECONDS}
-                  value={pickerSecond}
-                  onChange={setPickerSecond}
-                />
-                <ScrollColumn
-                  values={PERIODS}
-                  value={pickerPeriod}
-                  onChange={setPickerPeriod}
-                  formatValue={(item) => item}
-                />
-              </div>
+          <button
+            type="button"
+            className="iot-search-button"
+            onClick={handleSearch}
+            disabled={!searchInput.trim()}
+          >
+            <Search size={18} />
+            Search
+          </button>
 
-              <div className="picker-footer">
-                <button
-                  type="button"
-                  className="picker-clear"
-                  onClick={handleClearDate}
-                >
-                  Clear
-                </button>
+          {/* CLEAR BUTTON */}
 
-                <div className="picker-footer-right">
-                  <button
-                    type="button"
-                    className="picker-today"
-                    onClick={handleToday}
-                  >
-                    Today
-                  </button>
-                  <button
-                    type="button"
-                    className="picker-ok"
-                    onClick={handleConfirmDateTime}
-                  >
-                    OK
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          <button
+            type="button"
+            className="iot-clear-button"
+            onClick={handleClearAll}
+            disabled={!hasFilters}
+          >
+            <X size={17} />
+            Clear
+          </button>
         </div>
-
-        {/* Nút thực hiện tìm kiếm */}
-        <button
-          type="button"
-          className="sensor-search-button"
-          onClick={handleSearch}
-          disabled={searchInput.trim() === ""}
-          title={
-            searchInput.trim() === ""
-              ? "Enter a value before searching"
-              : "Search"
-          }
-        >
-          <Search size={18} />
-          Search
-        </button>
-
-        {/* Sắp xếp theo thời gian */}
-        <select
-          value={sortOrder}
-          onChange={(e) => {
-            setSortOrder(e.target.value);
-            setPage(1);
-          }}
-          title="Sort by time"
-        >
-          <option value="desc">
-            Newest First
-          </option>
-
-          <option value="asc">
-            Oldest First
-          </option>
-        </select>
-
-        {/* Xóa bộ lọc */}
-        <button
-          type="button"
-          className="clear-filter-button"
-          onClick={handleClearAll}
-          disabled={
-            searchInput === "" &&
-            appliedSearch === "" &&
-            type === "all" &&
-            sortOrder === "desc"
-          }
-        >
-          Clear All
-        </button>
       </div>
 
-      {/* Bảng dữ liệu cảm biến */}
-      <div className="table-card">
+      {/* BẢNG DỮ LIỆU */}
 
-        <div className="table-scroll">
-          <table className="data-table">
-
+      <div className="iot-table-panel">
+        <div className="iot-table-scroll">
+          <table className="iot-data-table">
             <thead>
               <tr>
                 <th>ID</th>
-                <th>TIME</th>
                 <th>SENSOR TYPE</th>
-
-                <th className="value-column">
-                  VALUE
-                </th>
+                <th>VALUE</th>
+                <th>TIME</th>
               </tr>
             </thead>
 
             <tbody>
               {displayed.map((item) => (
                 <tr key={item.id}>
+                  {/* ID */}
 
-                  <td>
+                  <td className="iot-id-cell">
                     #{item.id}
                   </td>
 
-                  <td>
-                    <span className="time-cell">
-                      <CalendarDays size={16} />
-
-                      {formatDateTime(
-                        item.timestamp
-                      )}
-                    </span>
-                  </td>
+                  {/* SENSOR TYPE */}
 
                   <td>
                     <span
-                      className={`type-badge ${item.type}`}
+                      className={`iot-type-badge ${item.className}`}
                     >
-                      ● {item.label}
+                      <span className="iot-badge-dot" />
+                      {item.label}
                     </span>
                   </td>
 
-                  <td className="value-column">
-                    {item.value} {item.unit}
+                  {/* VALUE */}
+
+                  <td className="iot-value-cell">
+                    {item.value.toLocaleString(
+                      "vi-VN",
+                      {
+                        maximumFractionDigits: 2,
+                      }
+                    )}
+
+                    <span>{item.unit}</span>
                   </td>
 
+                  {/* TIME + COPY */}
+
+                  <td>
+                    <div
+                      className="iot-time-cell"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <CalendarDays size={16} />
+
+                      <span>
+                        {formatDateTime(item.timestamp)}
+                      </span>
+
+                      <button
+                        type="button"
+                        title={
+                          copiedId === item.id
+                            ? "Copied!"
+                            : "Copy time"
+                        }
+                        aria-label="Copy time"
+                        onClick={() =>
+                          handleCopyTime(
+                            item.timestamp,
+                            item.id
+                          )
+                        }
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "28px",
+                          height: "28px",
+                          padding: 0,
+                          border: "none",
+                          borderRadius: "6px",
+                          background: "transparent",
+                          color:
+                            copiedId === item.id
+                              ? "#16a34a"
+                              : "#64748b",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        {copiedId === item.id ? (
+                          <Check size={16} />
+                        ) : (
+                          <Copy size={16} />
+                        )}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
 
               {displayed.length === 0 && (
                 <tr>
                   <td
-                    colSpan="4"
-                    className="empty-state"
+                    colSpan={4}
+                    className="iot-empty-table"
                   >
                     No sensor data found
                   </td>
                 </tr>
               )}
             </tbody>
-
           </table>
         </div>
 
-        {/* Phân trang */}
-        <div className="table-footer">
+        {/* PHÂN TRANG */}
 
-          <span>
-            Showing {displayed.length} of{" "}
-            {filtered.length} results
-          </span>
+        <div className="iot-table-footer">
+          <div className="iot-table-result-text">
+            Showing{" "}
+            <strong>{displayed.length}</strong>
+            {" "}of{" "}
+            <strong>{filtered.length}</strong>
+            {" "}results
+          </div>
 
-          <div className="table-footer-right">
+          <div className="iot-table-pagination">
+            {/* ROWS PER PAGE */}
 
-            <div className="page-size-control">
-              <span>
-                Rows per page:
-              </span>
+            <div className="iot-page-size">
+              <span>Rows per page:</span>
 
               <select
                 value={pageSize}
-                onChange={(e) => {
+                onChange={(event) => {
                   setPageSize(
-                    Number(e.target.value)
+                    Number(event.target.value)
                   );
-
                   setPage(1);
                 }}
               >
-                <option value={10}>
-                  10
-                </option>
-
-                <option value={20}>
-                  20
-                </option>
-
-                <option value={50}>
-                  50
-                </option>
-
-                <option value={100}>
-                  100
-                </option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
               </select>
             </div>
 
-            <div className="pagination">
+            {/* PAGE BUTTONS */}
 
+            <div className="iot-page-buttons">
               <button
-                disabled={currentPage === 1}
+                type="button"
+                disabled={currentPage <= 1}
                 onClick={() =>
                   setPage(currentPage - 1)
                 }
+                aria-label="Previous page"
               >
                 <ChevronLeft size={18} />
               </button>
 
-              {visiblePages.map((number) => (
+              {pageNumbers.map((number) => (
                 <button
+                  type="button"
                   key={number}
                   className={
                     currentPage === number
-                      ? "selected"
+                      ? "active"
                       : ""
                   }
-                  onClick={() =>
-                    setPage(number)
-                  }
+                  onClick={() => setPage(number)}
                 >
                   {number}
                 </button>
               ))}
 
               <button
-                disabled={
-                  currentPage === totalPages
-                }
+                type="button"
+                disabled={currentPage >= totalPages}
                 onClick={() =>
                   setPage(currentPage + 1)
                 }
+                aria-label="Next page"
               >
                 <ChevronRight size={18} />
               </button>
-
             </div>
           </div>
         </div>

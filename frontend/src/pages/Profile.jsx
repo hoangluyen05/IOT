@@ -1,4 +1,4 @@
-// Thông tin cá nhân
+
 import {
   Mail,
   MapPin,
@@ -9,7 +9,11 @@ import {
   Blocks,
 } from "lucide-react";
 
-import { profile, resources } from "../services/mockData";
+import {
+  profile,
+  resources,
+} from "../services/mockData";
+
 // Biểu tượng tài nguyên
 const resourceIcons = {
   PDF: FileText,
@@ -21,25 +25,35 @@ const resourceIcons = {
 export default function Profile() {
   return (
     <div className="profile-page">
+      {/* THÔNG TIN CÁ NHÂN */}
       <div className="profile-card">
         <div className="profile-heading">
-          {/* Ảnh đại diện */}
+          {/* Avatar */}
           <img
             src={profile.avatar}
             alt="Avatar"
             className="profile-avatar"
           />
-          {/* Tên người dùng */}
+
+          {/* Họ và tên */}
           <h2>{profile.name}</h2>
+
           {/* Mã sinh viên */}
-          <p>Student ID: {profile.studentId}</p>
+          <p>
+            Student ID: {profile.studentId}
+          </p>
+
           {/* Ngành học */}
-          <span className="major-badge">{profile.major}</span>
+          <span className="major-badge">
+            {profile.major}
+          </span>
         </div>
-        {/* Thông tin chi tiết */}
+
+        {/* THÔNG TIN CHI TIẾT */}
         <div className="profile-details">
           <div className="profile-detail">
             <Mail size={19} />
+
             <div>
               <small>EMAIL</small>
               <span>{profile.email}</span>
@@ -48,6 +62,7 @@ export default function Profile() {
 
           <div className="profile-detail">
             <MapPin size={19} />
+
             <div>
               <small>LOCATION</small>
               <span>{profile.location}</span>
@@ -56,6 +71,7 @@ export default function Profile() {
 
           <div className="profile-detail">
             <GraduationCap size={19} />
+
             <div>
               <small>UNIVERSITY</small>
               <span>{profile.university}</span>
@@ -63,29 +79,40 @@ export default function Profile() {
           </div>
         </div>
       </div>
-      {/* Tài liệu & Tài nguyên */}
+
+      {/* TÀI LIỆU VÀ TÀI NGUYÊN */}
       <div className="resources-section">
         <h2>Documentation & Resources</h2>
 
         <div className="resources-grid">
           {resources.map((item) => {
-            const Icon = resourceIcons[item.type]; // Biểu tượng tài nguyên
-            // Nội dung tài nguyên
+            const Icon =
+              resourceIcons[item.type] || FileText;
+
             const content = (
               <>
                 <div className="resource-top">
-                  <div className={`resource-icon ${item.type.toLowerCase()}`}>
+                  <div
+                    className={
+                      `resource-icon ${
+                        item.type.toLowerCase()
+                      }`
+                    }
+                  >
                     <Icon size={24} />
                   </div>
 
-                  <span className="resource-type">{item.type}</span>
+                  <span className="resource-type">
+                    {item.type}
+                  </span>
                 </div>
 
                 <h3>{item.title}</h3>
+
                 <p>{item.description}</p>
               </>
             );
-            // Trả về thẻ tài nguyên
+
             return item.url ? (
               <a
                 key={item.title}
@@ -97,7 +124,10 @@ export default function Profile() {
                 {content}
               </a>
             ) : (
-              <div key={item.title} className="resource-card">
+              <div
+                key={item.title}
+                className="resource-card"
+              >
                 {content}
               </div>
             );

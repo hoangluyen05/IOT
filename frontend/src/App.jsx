@@ -1,5 +1,9 @@
-
-import { useState } from "react";
+import { profile } from "./services/mockData";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import {
   BrowserRouter,
@@ -17,19 +21,38 @@ import DataSensor from "./pages/DataSensor";
 import ActionHistory from "./pages/ActionHistory";
 import Profile from "./pages/Profile";
 
-import useSensorSimulation from "./hooks/useSensorSimulation";
-
-import { initialDevices } from "./services/mockData";
-
+// GIỮ NGUYÊN XÁC THỰC Ở FRONTEND
 import {
   isAuthenticated,
   logout,
 } from "./services/authService";
 
+// API dữ liệu IoT
+import {
+  getDataSensors,
+  getDevices,
+  getHistory,
+} from "./services/api";
+
+// Chuyển dữ liệu Backend cho Frontend
+import {
+  listOf,
+  toSensorRecord,
+  toDevice,
+  toAction,
+  chartPoints,
+} from "./services/adapters";
+
 import "./styles/global.css";
 
-// Component bảo vệ các trang cần đăng nhập
-function ProtectedRoute({ authenticated, children }) {
+// =====================================
+// BẢO VỆ TRANG ĐÃ ĐĂNG NHẬP
+// =====================================
+
+function ProtectedRoute({
+  authenticated,
+  children,
+}) {
   if (!authenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -37,7 +60,10 @@ function ProtectedRoute({ authenticated, children }) {
   return children;
 }
 
-// Layout chính của hệ thống
+// =====================================
+// GIAO DIỆN CHÍNH
+// =====================================
+
 function MainLayout({
   authenticated,
   onLogout,
@@ -45,17 +71,21 @@ function MainLayout({
   history,
   records,
   devices,
-  setDevices,
   actions,
-  addAction,
+  refreshDevices,
+  apiError,
 }) {
   const navigate = useNavigate();
 
   function handleLogout() {
+    // Đăng xuất bằng authService Frontend
     logout();
+
     onLogout();
 
-    navigate("/login", { replace: true });
+    navigate("/login", {
+      replace: true,
+    });
   }
 
   return (
@@ -75,7 +105,23 @@ function MainLayout({
           </header>
 
           <main className="main-content">
+            {/* Thông báo lỗi kết nối Backend */}
+            {apiError && (
+              <div
+                role="alert"
+                style={{
+                  padding: 10,
+                  color: "#b91c1c",
+                }}
+              >
+                Không tải được dữ liệu Backend:
+                {" "}
+                {apiError}
+              </div>
+            )}
+
             <Routes>
+              {/* DASHBOARD */}
               <Route
                 index
                 element={
@@ -83,22 +129,33 @@ function MainLayout({
                     sensor={sensor}
                     history={history}
                     devices={devices}
-                    setDevices={setDevices}
-                    onAction={addAction}
+                    refreshDevices={refreshDevices}
                   />
                 }
               />
 
+              {/* DATA SENSOR */}
               <Route
                 path="sensors"
-                element={<DataSensor records={records} />}
+                element={
+                  <DataSensor
+                    records={records}
+                  />
+                }
               />
 
+              {/* HISTORY */}
               <Route
-                path="history"
-                element={<ActionHistory actions={actions} />}
-              />
+  path="history"
+  element={
+    <ActionHistory
+      actions={actions}
+      currentUser={profile}
+    />
+  }
+/>
 
+              {/* PROFILE - GIỮ FRONTEND */}
               <Route
                 path="profile"
                 element={<Profile />}
@@ -106,7 +163,9 @@ function MainLayout({
 
               <Route
                 path="*"
-                element={<Navigate to="/" replace />}
+                element={
+                  <Navigate to="/" replace />
+                }
               />
             </Routes>
           </main>
@@ -116,38 +175,226 @@ function MainLayout({
   );
 }
 
-// Component App chính, khối kiểm tra đăng nhập
+// =====================================
+// APP
+// =====================================
+
 export default function App() {
-  const [authenticated, setAuthenticated] = useState(
-    () => isAuthenticated()
-  );
+  // Đăng nhập hoàn toàn bằng Frontend
+  const [authenticated, setAuthenticated] =
+    useState(() => isAuthenticated());
 
-  const { sensor, history, records } = useSensorSimulation();
+  // Dữ liệu cảm biến mới nhất
+  const [sensor, setSensor] = useState({
+    temperature: null,
+    humidity: null,
+    light: null,
+  });
 
-  const [devices, setDevices] = useState(initialDevices);
+  // Dữ liệu biểu đồ
+  const [history, setHistory] = useState([]);
 
+  // Dữ liệu bảng cảm biến
+  const [records, setRecords] = useState([]);
+
+  // Danh sách trạng thái LED
+  const [devices, setDevices] = useState([]);
+
+  // Lịch sử điều khiển LED
   const [actions, setActions] = useState([]);
 
-  function addAction(action) {
-    setActions((previous) => [action, ...previous]);
-  }
+  // Lỗi kết nối Backend
+  const [apiError, setApiError] = useState("");
+
+  // =====================================
+  // TẢI LẠI TRẠNG THÁI LED
+  // =====================================
+
+  const refreshDevices = useCallback(async () => {
+    const response = await getDevices();
+
+    const result = listOf(response).map(toDevice);
+
+    setDevices(result);
+
+    return result;
+  }, []);
+
+  // =====================================
+  // LẤY DỮ LIỆU TỪ BACKEND
+  // =====================================
+
+  useEffect(() => {
+    // Chỉ lấy dữ liệu khi người dùng đã đăng nhập
+    if (!authenticated) return;
+
+    let active = true;
+    let inFlight = false;
+
+    async function loadBackendData() {
+      // Tránh các yêu cầu tải dữ liệu chồng nhau
+      if (inFlight) return;
+
+      inFlight = true;
+
+      try {
+        const [
+          sensorResponse,
+          deviceResponse,
+          historyResponse,
+        ] = await Promise.all([
+          // 500 bản ghi cảm biến gần nhất
+          getDataSensors({
+            page: 0,
+            size: 500,
+            sort: "desc",
+          }),
+
+          // Danh sách LED
+          getDevices(),
+
+          // Lịch sử thao tác
+          getHistory(),
+        ]);
+
+        if (!active) return;
+
+        // =================================
+        // 1. DỮ LIỆU CẢM BIẾN
+        // =================================
+
+        const sensorRecords =
+          listOf(sensorResponse)
+            .map(toSensorRecord)
+            .filter(
+              (item) =>
+                item.timestamp > 0 &&
+                Number.isFinite(item.value)
+            );
+
+        setRecords(sensorRecords);
+
+        // =================================
+        // 2. BIỂU ĐỒ
+        // =================================
+
+        setHistory(chartPoints(sensorRecords));
+
+        // =================================
+        // 3. CẢM BIẾN MỚI NHẤT
+        // =================================
+
+        const latest = {
+          temperature: null,
+          humidity: null,
+          light: null,
+        };
+
+        const seen = new Set();
+
+        const sorted = [...sensorRecords].sort(
+          (a, b) => b.timestamp - a.timestamp
+        );
+
+        for (const item of sorted) {
+          if (
+            Object.prototype.hasOwnProperty.call(
+              latest,
+              item.type
+            ) &&
+            !seen.has(item.type)
+          ) {
+            latest[item.type] = item.value;
+            seen.add(item.type);
+          }
+        }
+
+        setSensor(latest);
+
+        // =================================
+        // 4. THIẾT BỊ
+        // =================================
+
+        const deviceRecords =
+          listOf(deviceResponse).map(toDevice);
+
+        setDevices(deviceRecords);
+
+        // =================================
+        // 5. LỊCH SỬ ĐIỀU KHIỂN
+        // =================================
+
+        const actionRecords =
+          listOf(historyResponse).map(
+            (item) => toAction(item, deviceRecords)
+          );
+
+        setActions(actionRecords);
+
+        setApiError("");
+      } catch (error) {
+        if (active) {
+          setApiError(error.message);
+        }
+      } finally {
+        inFlight = false;
+      }
+    }
+
+    // Tải dữ liệu lần đầu
+    loadBackendData();
+
+    // Cập nhật sau mỗi 3 giây
+    const timer = setInterval(
+      loadBackendData,
+      3000
+    );
+
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [authenticated]);
+
+  // =====================================
+  // ĐĂNG NHẬP
+  // =====================================
 
   function handleLogin() {
+    // Login.jsx đã kiểm tra tài khoản
     setAuthenticated(true);
   }
+
+  // =====================================
+  // ĐĂNG XUẤT
+  // =====================================
 
   function handleLogout() {
     setAuthenticated(false);
 
-    // Đặt lại trạng thái thiết bị và lịch sử demo
-    setDevices(initialDevices);
+    // Xóa dữ liệu IoT trong bộ nhớ giao diện
+    setDevices([]);
+    setRecords([]);
+    setHistory([]);
     setActions([]);
+
+    setSensor({
+      temperature: null,
+      humidity: null,
+      light: null,
+    });
+
+    setApiError("");
   }
+
+  // =====================================
+  // ROUTER
+  // =====================================
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Trang đăng nhập */}
+        {/* TRANG LOGIN */}
         <Route
           path="/login"
           element={
@@ -159,7 +406,7 @@ export default function App() {
           }
         />
 
-        {/* Các trang cần đăng nhập */}
+        {/* CÁC TRANG SAU ĐĂNG NHẬP */}
         <Route
           path="/*"
           element={
@@ -170,9 +417,9 @@ export default function App() {
               history={history}
               records={records}
               devices={devices}
-              setDevices={setDevices}
               actions={actions}
-              addAction={addAction}
+              refreshDevices={refreshDevices}
+              apiError={apiError}
             />
           }
         />

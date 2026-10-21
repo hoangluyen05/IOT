@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   Search,
@@ -8,7 +8,17 @@ import {
   ChevronRight,
   ChevronUp,
   ChevronDown,
+  Copy,
+  Check,
 } from "lucide-react";
+
+import { profile } from "../services/mockData";
+
+import "../styles/global.css";
+
+// ========================================
+// 1. CẤU HÌNH BỘ CHỌN THỜI GIAN
+// ========================================
 
 const MONTH_NAMES = [
   "January",
@@ -25,77 +35,112 @@ const MONTH_NAMES = [
   "December",
 ];
 
-const HOURS = Array.from({ length: 12 }, (_, index) => index + 1);
-const MINUTES = Array.from({ length: 60 }, (_, index) => index);
-const SECONDS = Array.from({ length: 60 }, (_, index) => index);
+const HOURS = Array.from(
+  { length: 12 },
+  (_, index) => index + 1
+);
+
+const MINUTES = Array.from(
+  { length: 60 },
+  (_, index) => index
+);
+
+const SECONDS = Array.from(
+  { length: 60 },
+  (_, index) => index
+);
+
 const PERIODS = ["AM", "PM"];
 
-// =========================================
-// FORMAT DATE TIME
-// =========================================
-function formatDateTime(timestamp) {
-  const date = new Date(timestamp);
+// ========================================
+// 2. ĐỊNH DẠNG THỜI GIAN
+// ========================================
 
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
+function toTimestamp(value) {
+  if (value === null || value === undefined) {
+    return 0;
+  }
 
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const year = date.getFullYear();
+  if (typeof value === "number") {
+    return value;
+  }
 
-  return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
+  const timestamp = new Date(value).getTime();
+
+  return Number.isFinite(timestamp)
+    ? timestamp
+    : 0;
 }
 
-// =========================================
-// GET CALENDAR DAYS
-// =========================================
+// yyyy/MM/dd HH:mm:ss
+function formatDateTime(value) {
+  const timestamp = toTimestamp(value);
+
+  if (!timestamp) return "--";
+
+  const date = new Date(timestamp);
+
+  const pad = (number) =>
+    String(number).padStart(2, "0");
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+
+  const hour = pad(date.getHours());
+  const minute = pad(date.getMinutes());
+  const second = pad(date.getSeconds());
+
+  return `${year}/${month}/${day} ${hour}:${minute}:${second}`;
+}
+
+// ========================================
+// 3. TẠO LỊCH THEO THÁNG
+// ========================================
+
 function getCalendarDays(year, month) {
   const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const daysInPreviousMonth = new Date(year, month, 0).getDate();
 
   const days = [];
 
-  for (let i = firstDay - 1; i >= 0; i--) {
+  for (let index = 0; index < 42; index++) {
+    const date = new Date(
+      year,
+      month,
+      index - firstDay + 1
+    );
+
     days.push({
-      day: daysInPreviousMonth - i,
-      monthOffset: -1,
+      day: date.getDate(),
+      year: date.getFullYear(),
+      month: date.getMonth(),
+
+      monthOffset:
+        date.getFullYear() === year &&
+        date.getMonth() === month
+          ? 0
+          : date < new Date(year, month, 1)
+          ? -1
+          : 1,
     });
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    days.push({
-      day,
-      monthOffset: 0,
-    });
-  }
-
-  let nextDay = 1;
-
-  while (days.length < 42) {
-    days.push({
-      day: nextDay,
-      monthOffset: 1,
-    });
-
-    nextDay++;
   }
 
   return days;
 }
 
-// =========================================
-// SCROLL TIME COLUMN
-// =========================================
+// ========================================
+// 4. COMPONENT CUỘN GIỜ, PHÚT, GIÂY
+// ========================================
+
 function ScrollColumn({
   values,
   value,
   onChange,
-  formatValue = (item) => String(item).padStart(2, "0"),
+  formatValue = (item) =>
+    String(item).padStart(2, "0"),
 }) {
   const containerRef = useRef(null);
-  const scrollTimerRef = useRef(null);
+  const timerRef = useRef(null);
 
   const ITEM_HEIGHT = 38;
 
@@ -108,49 +153,50 @@ function ScrollColumn({
     }
   }, [value, values]);
 
-  const handleScroll = () => {
-    if (!containerRef.current) return;
+  useEffect(() => {
+    return () => clearTimeout(timerRef.current);
+  }, []);
 
-    if (scrollTimerRef.current) {
-      clearTimeout(scrollTimerRef.current);
-    }
+  function handleScroll() {
+    clearTimeout(timerRef.current);
 
-    scrollTimerRef.current = setTimeout(() => {
-      if (!containerRef.current) return;
+    timerRef.current = setTimeout(() => {
+      const container = containerRef.current;
 
-      const index = Math.round(
-        containerRef.current.scrollTop /
-          ITEM_HEIGHT
-      );
+      if (!container) return;
 
-      const safeIndex = Math.max(
+      const index = Math.max(
         0,
-        Math.min(index, values.length - 1)
+        Math.min(
+          Math.round(
+            container.scrollTop / ITEM_HEIGHT
+          ),
+          values.length - 1
+        )
       );
 
-      onChange(values[safeIndex]);
+      onChange(values[index]);
 
-      containerRef.current.scrollTo({
-        top: safeIndex * ITEM_HEIGHT,
+      container.scrollTo({
+        top: index * ITEM_HEIGHT,
         behavior: "smooth",
       });
     }, 100);
-  };
+  }
 
-  const handleSelect = (item) => {
-    const index = values.indexOf(item);
-
+  function handleSelect(item) {
     onChange(item);
+
+    const index = values.indexOf(item);
 
     containerRef.current?.scrollTo({
       top: index * ITEM_HEIGHT,
       behavior: "smooth",
     });
-  };
+  }
 
   return (
     <div className="scroll-time-wrapper">
-
       <div
         ref={containerRef}
         className="scroll-time-column"
@@ -160,14 +206,12 @@ function ScrollColumn({
 
         {values.map((item) => (
           <button
-            type="button"
             key={item}
+            type="button"
             className={`scroll-time-item ${
               item === value ? "selected" : ""
             }`}
-            onClick={() =>
-              handleSelect(item)
-            }
+            onClick={() => handleSelect(item)}
           >
             {formatValue(item)}
           </button>
@@ -181,288 +225,388 @@ function ScrollColumn({
   );
 }
 
+// ========================================
+// 5. COMPONENT ACTION HISTORY
+// ========================================
+
 export default function ActionHistory({
-  actions,
+  actions = [],
   currentUser,
 }) {
-  // =========================================
-  // FILTER
-  // =========================================
+  // =====================================
+  // TÀI KHOẢN FRONTEND
+  // =====================================
+
+  const frontendUser = currentUser || profile;
+
+  const loginName =
+    frontendUser?.name ||
+    frontendUser?.fullName ||
+    profile?.name ||
+    "Unknown User";
+
+  const loginUsername =
+    frontendUser?.username ||
+    frontendUser?.account ||
+    frontendUser?.studentId ||
+    profile?.username ||
+    profile?.studentId ||
+    "--";
+
+  // =====================================
+  // BỘ LỌC
+  // =====================================
+
   const [search, setSearch] = useState("");
 
   const [device, setDevice] = useState("all");
+
   const [action, setAction] = useState("all");
+
   const [status, setStatus] = useState("all");
 
-  // Mặc định mới nhất trước
   const [sortOrder, setSortOrder] = useState("desc");
 
-  // =========================================
-  // PAGINATION
-  // =========================================
+  // =====================================
+  // PHÂN TRANG
+  // =====================================
+
   const [page, setPage] = useState(1);
+
   const [pageSize, setPageSize] = useState(10);
 
-  // =========================================
-  // DATE TIME PICKER
-  // =========================================
+  // =====================================
+  // DATETIME PICKER
+  // =====================================
+
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const now = new Date();
-
-  const [pickerYear, setPickerYear] = useState(
-    now.getFullYear()
-  );
-
-  const [pickerMonth, setPickerMonth] = useState(
-    now.getMonth()
-  );
-
-  const [pickerDay, setPickerDay] = useState(
-    now.getDate()
-  );
-
-  const [pickerHour, setPickerHour] = useState(
-    now.getHours() % 12 || 12
-  );
-
-  const [pickerMinute, setPickerMinute] = useState(
-    now.getMinutes()
-  );
-
-  const [pickerSecond, setPickerSecond] = useState(
-    now.getSeconds()
-  );
-
-  const [pickerPeriod, setPickerPeriod] = useState(
-    now.getHours() >= 12 ? "PM" : "AM"
+  const [pickerDate, setPickerDate] = useState(
+    () => new Date()
   );
 
   const pickerRef = useRef(null);
 
-  // =========================================
-  // CLICK OUTSIDE PICKER
-  // =========================================
+  // =====================================
+  // COPY THỜI GIAN
+  // =====================================
+
+  const [copiedId, setCopiedId] = useState(null);
+
+  async function handleCopyTime(timestamp, rowId) {
+    const text = formatDateTime(timestamp);
+
+    if (text === "--") return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(rowId);
+    } catch (error) {
+      console.error(
+        "Không thể sao chép thời gian:",
+        error
+      );
+    }
+  }
+
+  // =====================================
+  // GIÁ TRỊ NGÀY GIỜ ĐANG CHỌN
+  // =====================================
+
+  const pickerYear = pickerDate.getFullYear();
+  const pickerMonth = pickerDate.getMonth();
+  const pickerDay = pickerDate.getDate();
+
+  const pickerHour =
+    pickerDate.getHours() % 12 || 12;
+
+  const pickerMinute = pickerDate.getMinutes();
+  const pickerSecond = pickerDate.getSeconds();
+
+  const pickerPeriod =
+    pickerDate.getHours() >= 12
+      ? "PM"
+      : "AM";
+
+  // =====================================
+  // ĐÓNG PICKER KHI CLICK BÊN NGOÀI
+  // =====================================
+
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    function handleOutside(event) {
       if (
         pickerRef.current &&
         !pickerRef.current.contains(event.target)
       ) {
         setPickerOpen(false);
       }
-    };
+    }
 
     document.addEventListener(
       "mousedown",
-      handleClickOutside
+      handleOutside
     );
 
     return () => {
       document.removeEventListener(
         "mousedown",
-        handleClickOutside
+        handleOutside
       );
     };
   }, []);
 
-  const calendarDays = getCalendarDays(
-    pickerYear,
-    pickerMonth
-  );
+  // =====================================
+  // CẬP NHẬT NGÀY GIỜ
+  // =====================================
 
-  // =========================================
-  // PREVIOUS MONTH
-  // =========================================
-  const handlePreviousMonth = () => {
-    if (pickerMonth === 0) {
-      setPickerMonth(11);
-      setPickerYear((prev) => prev - 1);
-    } else {
-      setPickerMonth((prev) => prev - 1);
-    }
-  };
+  function updatePicker(parts) {
+    setPickerDate((previous) => {
+      const date = new Date(previous);
 
-  // =========================================
-  // NEXT MONTH
-  // =========================================
-  const handleNextMonth = () => {
-    if (pickerMonth === 11) {
-      setPickerMonth(0);
-      setPickerYear((prev) => prev + 1);
-    } else {
-      setPickerMonth((prev) => prev + 1);
-    }
-  };
+      if (parts.year !== undefined) {
+        date.setFullYear(parts.year);
+      }
 
-  // =========================================
-  // SELECT DAY
-  // =========================================
-  const handleSelectDay = (item) => {
-    if (item.monthOffset === -1) {
-      const date = new Date(
+      if (parts.month !== undefined) {
+        date.setDate(1);
+        date.setMonth(parts.month);
+      }
+
+      if (parts.day !== undefined) {
+        date.setDate(parts.day);
+      }
+
+      if (parts.hour !== undefined) {
+        date.setHours(parts.hour);
+      }
+
+      if (parts.minute !== undefined) {
+        date.setMinutes(parts.minute);
+      }
+
+      if (parts.second !== undefined) {
+        date.setSeconds(parts.second);
+      }
+
+      return date;
+    });
+  }
+
+  function changeMonth(offset) {
+    setPickerDate(
+      new Date(
         pickerYear,
-        pickerMonth - 1,
-        item.day
-      );
-
-      setPickerYear(date.getFullYear());
-      setPickerMonth(date.getMonth());
-      setPickerDay(date.getDate());
-
-      return;
-    }
-
-    if (item.monthOffset === 1) {
-      const date = new Date(
-        pickerYear,
-        pickerMonth + 1,
-        item.day
-      );
-
-      setPickerYear(date.getFullYear());
-      setPickerMonth(date.getMonth());
-      setPickerDay(date.getDate());
-
-      return;
-    }
-
-    setPickerDay(item.day);
-  };
-
-  // =========================================
-  // TODAY
-  // =========================================
-  const handleToday = () => {
-    const today = new Date();
-
-    setPickerYear(today.getFullYear());
-    setPickerMonth(today.getMonth());
-    setPickerDay(today.getDate());
-
-    setPickerHour(today.getHours() % 12 || 12);
-    setPickerMinute(today.getMinutes());
-    setPickerSecond(today.getSeconds());
-
-    setPickerPeriod(
-      today.getHours() >= 12 ? "PM" : "AM"
+        pickerMonth + offset,
+        1,
+        pickerDate.getHours(),
+        pickerMinute,
+        pickerSecond
+      )
     );
-  };
+  }
 
-  // =========================================
-  // CLEAR DATE
-  // =========================================
-  const handleClearDate = () => {
+  function selectDay(item) {
+    const date = new Date(pickerDate);
+
+    date.setFullYear(
+      item.year,
+      item.month,
+      item.day
+    );
+
+    setPickerDate(date);
+  }
+
+  function changeHour12(hour12) {
+    updatePicker({
+      hour:
+        (hour12 % 12) +
+        (pickerPeriod === "PM" ? 12 : 0),
+    });
+  }
+
+  function changePeriod(period) {
+    updatePicker({
+      hour:
+        (pickerHour % 12) +
+        (period === "PM" ? 12 : 0),
+    });
+  }
+
+  function handleConfirmDateTime() {
+    setSearch(formatDateTime(pickerDate));
+
+    setPage(1);
+    setPickerOpen(false);
+  }
+
+  function handleClearDate() {
     setSearch("");
     setPage(1);
     setPickerOpen(false);
-  };
+  }
 
-  // =========================================
-  // CONFIRM DATE TIME
-  // =========================================
-  const handleConfirmDateTime = () => {
-    let hour24 = pickerHour;
+  // =====================================
+  // XÓA TOÀN BỘ BỘ LỌC
+  // =====================================
 
-    if (
-      pickerPeriod === "AM" &&
-      pickerHour === 12
-    ) {
-      hour24 = 0;
-    }
-
-    if (
-      pickerPeriod === "PM" &&
-      pickerHour !== 12
-    ) {
-      hour24 = pickerHour + 12;
-    }
-
-    const selectedDate = new Date(
-      pickerYear,
-      pickerMonth,
-      pickerDay,
-      hour24,
-      pickerMinute,
-      pickerSecond
-    );
-
-    setSearch(
-      formatDateTime(selectedDate.getTime())
-    );
-
-    setPage(1);
-
-    // Chỉ bấm OK mới đóng + áp dụng
-    setPickerOpen(false);
-  };
-
-  // =========================================
-  // CLEAR ALL
-  // =========================================
-  const handleClearAll = () => {
+  function handleClearAll() {
     setSearch("");
-
     setDevice("all");
     setAction("all");
     setStatus("all");
-
     setSortOrder("desc");
 
     setPage(1);
     setPickerOpen(false);
-  };
+  }
 
-  // =========================================
-  // FILTER + SORT
-  // =========================================
-  const filtered = actions
-    .filter((item) => {
-      const date = formatDateTime(
-        item.timestamp
-      );
+  // =====================================
+  // CHUẨN HÓA HISTORY TỪ BACKEND
+  // =====================================
 
-      const matchSearch = date
-        .toLowerCase()
-        .includes(
-          search.trim().toLowerCase()
-        );
+  const rows = useMemo(() => {
+    const source = Array.isArray(actions)
+      ? actions
+      : [];
 
-      const matchDevice =
-        device === "all" ||
-        item.deviceName === device;
+    return source.map((item, index) => {
+      const deviceId =
+        item.deviceId ??
+        item.device_id ??
+        item.device?.deviceId ??
+        item.device?.id;
 
-      const matchAction =
-        action === "all" ||
-        item.action === action;
+      const rawStatus = String(
+        item.status ?? ""
+      ).toUpperCase();
 
-      const matchStatus =
-        status === "all" ||
-        item.status === status;
+      let displayStatus = "Loading";
 
-      return (
-        matchSearch &&
-        matchDevice &&
-        matchAction &&
-        matchStatus
-      );
-    })
-    .sort((a, b) => {
-      if (sortOrder === "asc") {
-        return a.timestamp - b.timestamp;
+      if (
+        rawStatus === "SUCCESS" ||
+        rawStatus === "SUCCESSFUL"
+      ) {
+        displayStatus = "Success";
+      } else if (
+        rawStatus === "FAILED" ||
+        rawStatus === "ERROR"
+      ) {
+        displayStatus = "Error";
       }
 
-      return b.timestamp - a.timestamp;
-    });
+      const actionValue = String(
+        item.action ?? ""
+      ).toUpperCase();
 
-  // =========================================
-  // PAGINATION
-  // =========================================
+      return {
+        id:
+          item.id ??
+          item.historyId ??
+          item.history_id ??
+          index,
+
+        deviceId,
+
+        deviceName:
+          item.deviceName ||
+          item.device?.name ||
+          `LED ${deviceId ?? "?"}`,
+
+        action: actionValue,
+
+        status: displayStatus,
+
+        timestamp: toTimestamp(
+          item.timestamp ?? item.time
+        ),
+
+        userName:
+          item.userName || loginName,
+
+        username:
+          item.username || loginUsername,
+      };
+    });
+  }, [actions, loginName, loginUsername]);
+
+  // =====================================
+  // DANH SÁCH THIẾT BỊ
+  // =====================================
+
+  const deviceOptions = useMemo(() => {
+    return [
+      ...new Set(
+        rows
+          .map((item) => item.deviceName)
+          .filter(Boolean)
+      ),
+    ].sort();
+  }, [rows]);
+
+  // =====================================
+  // LỌC VÀ SẮP XẾP
+  // =====================================
+
+  const filtered = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    return rows
+      .filter((item) => {
+        const timeText = formatDateTime(
+          item.timestamp
+        ).toLowerCase();
+
+        const matchSearch =
+          !keyword ||
+          timeText.includes(keyword);
+
+        const matchDevice =
+          device === "all" ||
+          item.deviceName === device;
+
+        const matchAction =
+          action === "all" ||
+          item.action === action;
+
+        const matchStatus =
+          status === "all" ||
+          item.status === status;
+
+        return (
+          matchSearch &&
+          matchDevice &&
+          matchAction &&
+          matchStatus
+        );
+      })
+      .sort((a, b) => {
+        const timeDiff =
+          a.timestamp - b.timestamp;
+
+        const idDiff =
+          Number(a.id) - Number(b.id);
+
+        return sortOrder === "asc"
+          ? timeDiff || idDiff
+          : -timeDiff || -idDiff;
+      });
+  }, [
+    rows,
+    search,
+    device,
+    action,
+    status,
+    sortOrder,
+  ]);
+
+  // =====================================
+  // PHÂN TRANG
+  // =====================================
+
   const totalPages = Math.max(
     1,
-    Math.ceil(
-      filtered.length / pageSize
-    )
+    Math.ceil(filtered.length / pageSize)
   );
 
   const currentPage = Math.min(
@@ -485,33 +629,36 @@ export default function ActionHistory({
       Math.abs(number - currentPage) <= 1
   );
 
-  return (
-    <div className="history-page data-page">
+  // =====================================
+  // GIAO DIỆN HISTORY
+  // =====================================
 
+  return (
+    <div className="data-page history-page">
       <h1 className="page-title">
         History
       </h1>
 
-      {/* =========================================
-          FILTER
-      ========================================= */}
-      <div className="history-filter">
+      {/* =================================
+          BỘ LỌC
+      ================================= */}
 
-        {/* SEARCH TIME */}
+      <div className="history-filter">
+        {/* SEARCH THEO THỜI GIAN */}
+
         <div
           className="datetime-picker-wrapper"
           ref={pickerRef}
         >
           <div className="search-field time-search-field">
-
             <Search size={20} />
 
             <input
               type="text"
               placeholder="Search by time..."
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
+              onChange={(event) => {
+                setSearch(event.target.value);
                 setPage(1);
               }}
             />
@@ -520,26 +667,22 @@ export default function ActionHistory({
               type="button"
               className="datetime-picker-button"
               onClick={() =>
-                setPickerOpen((prev) => !prev)
+                setPickerOpen((current) => !current)
               }
               title="Select date and time"
             >
               <CalendarClock size={19} />
             </button>
-
           </div>
 
-          {/* =========================================
-              DATE TIME PICKER
-          ========================================= */}
+          {/* DATETIME PICKER */}
+
           {pickerOpen && (
             <div className="custom-datetime-picker">
+              {/* LỊCH */}
 
-              {/* CALENDAR */}
               <div className="picker-calendar">
-
                 <div className="picker-calendar-header">
-
                   <strong>
                     {MONTH_NAMES[pickerMonth]}{" "}
                     {pickerYear}
@@ -548,7 +691,7 @@ export default function ActionHistory({
                   <div>
                     <button
                       type="button"
-                      onClick={handlePreviousMonth}
+                      onClick={() => changeMonth(-1)}
                       title="Previous month"
                     >
                       <ChevronUp size={19} />
@@ -556,13 +699,12 @@ export default function ActionHistory({
 
                     <button
                       type="button"
-                      onClick={handleNextMonth}
+                      onClick={() => changeMonth(1)}
                       title="Next month"
                     >
                       <ChevronDown size={19} />
                     </button>
                   </div>
-
                 </div>
 
                 <div className="picker-weekdays">
@@ -576,87 +718,87 @@ export default function ActionHistory({
                 </div>
 
                 <div className="picker-days">
+                  {getCalendarDays(
+                    pickerYear,
+                    pickerMonth
+                  ).map((item, index) => (
+                    <button
+                      type="button"
+                      key={index}
+                      className={[
+                        "picker-day",
 
-                  {calendarDays.map(
-                    (item, index) => (
-                      <button
-                        type="button"
-                        key={`${item.monthOffset}-${item.day}-${index}`}
-                        className={[
-                          "picker-day",
+                        item.monthOffset !== 0
+                          ? "other-month"
+                          : "",
 
-                          item.monthOffset !== 0
-                            ? "other-month"
-                            : "",
-
-                          item.monthOffset === 0 &&
-                          item.day === pickerDay
-                            ? "selected"
-                            : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        onClick={() =>
-                          handleSelectDay(item)
-                        }
-                      >
-                        {item.day}
-                      </button>
-                    )
-                  )}
-
+                        item.monthOffset === 0 &&
+                        item.day === pickerDay
+                          ? "selected"
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => selectDay(item)}
+                    >
+                      {item.day}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* =========================================
-                  SCROLL TIME
-              ========================================= */}
-              <div className="picker-time">
+              {/* CHỌN GIỜ PHÚT GIÂY */}
 
-                {/* HOUR */}
+              <div className="picker-time">
+                {/* GIỜ */}
+
                 <ScrollColumn
                   values={HOURS}
                   value={pickerHour}
-                  onChange={setPickerHour}
+                  onChange={changeHour12}
                 />
 
                 <span className="time-wheel-separator">
                   :
                 </span>
 
-                {/* MINUTE */}
+                {/* PHÚT */}
+
                 <ScrollColumn
                   values={MINUTES}
                   value={pickerMinute}
-                  onChange={setPickerMinute}
+                  onChange={(minute) =>
+                    updatePicker({ minute })
+                  }
                 />
 
                 <span className="time-wheel-separator">
                   :
                 </span>
 
-                {/* SECOND */}
+                {/* GIÂY */}
+
                 <ScrollColumn
                   values={SECONDS}
                   value={pickerSecond}
-                  onChange={setPickerSecond}
+                  onChange={(second) =>
+                    updatePicker({ second })
+                  }
                 />
 
                 {/* AM / PM */}
+
                 <ScrollColumn
                   values={PERIODS}
                   value={pickerPeriod}
-                  onChange={setPickerPeriod}
+                  onChange={changePeriod}
                   formatValue={(item) => item}
                 />
-
               </div>
 
-              {/* =========================================
-                  FOOTER
-              ========================================= */}
-              <div className="picker-footer">
+              {/* NÚT CHỌN NGÀY GIỜ */}
 
+              <div className="picker-footer">
                 <button
                   type="button"
                   className="picker-clear"
@@ -666,11 +808,12 @@ export default function ActionHistory({
                 </button>
 
                 <div className="picker-footer-right">
-
                   <button
                     type="button"
                     className="picker-today"
-                    onClick={handleToday}
+                    onClick={() =>
+                      setPickerDate(new Date())
+                    }
                   >
                     Today
                   </button>
@@ -682,18 +825,18 @@ export default function ActionHistory({
                   >
                     OK
                   </button>
-
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* DEVICE */}
+        {/* LỌC THEO THIẾT BỊ */}
+
         <select
           value={device}
-          onChange={(e) => {
-            setDevice(e.target.value);
+          onChange={(event) => {
+            setDevice(event.target.value);
             setPage(1);
           }}
         >
@@ -701,24 +844,19 @@ export default function ActionHistory({
             All Devices
           </option>
 
-          <option value="LED 1">
-            LED 1
-          </option>
-
-          <option value="LED 2">
-            LED 2
-          </option>
-
-          <option value="LED 3">
-            LED 3
-          </option>
+          {deviceOptions.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
         </select>
 
-        {/* ACTION */}
+        {/* LỌC THEO HÀNH ĐỘNG */}
+
         <select
           value={action}
-          onChange={(e) => {
-            setAction(e.target.value);
+          onChange={(event) => {
+            setAction(event.target.value);
             setPage(1);
           }}
         >
@@ -735,11 +873,12 @@ export default function ActionHistory({
           </option>
         </select>
 
-        {/* STATUS */}
+        {/* LỌC THEO TRẠNG THÁI */}
+
         <select
           value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
+          onChange={(event) => {
+            setStatus(event.target.value);
             setPage(1);
           }}
         >
@@ -754,19 +893,20 @@ export default function ActionHistory({
           <option value="Error">
             Error
           </option>
+
           <option value="Loading">
             Loading
           </option>
         </select>
 
-        {/* SORT */}
+        {/* SẮP XẾP */}
+
         <select
           value={sortOrder}
-          onChange={(e) => {
-            setSortOrder(e.target.value);
+          onChange={(event) => {
+            setSortOrder(event.target.value);
             setPage(1);
           }}
-          title="Sort by time"
         >
           <option value="desc">
             Newest First
@@ -777,7 +917,8 @@ export default function ActionHistory({
           </option>
         </select>
 
-        {/* CLEAR ALL */}
+        {/* XÓA BỘ LỌC */}
+
         <button
           type="button"
           className="clear-filter-button"
@@ -792,71 +933,51 @@ export default function ActionHistory({
         >
           Clear All
         </button>
-
       </div>
 
-      {/* =========================================
-          TABLE
-      ========================================= */}
+      {/* =================================
+          BẢNG LỊCH SỬ
+      ================================= */}
+
       <div className="table-card">
-
         <div className="table-scroll">
-
-          <table className="data-table">
-
+          <table className="data-table history-data-table">
             <thead>
               <tr>
                 <th>ID</th>
                 <th>USER</th>
-                <th>TIME</th>
                 <th>DEVICE</th>
                 <th>ACTION</th>
                 <th>STATUS</th>
+                <th>TIME</th>
               </tr>
             </thead>
 
             <tbody>
-
               {displayed.map((item) => (
                 <tr key={item.id}>
+                  {/* ID */}
 
                   <td>
                     #{item.id}
                   </td>
 
                   {/* USER */}
+
                   <td>
                     <div className="history-user">
-
                       <strong>
-                        {item.userName ||
-                          currentUser?.name ||
-                          "Hoàng Thị Luyến"}
+                        {item.userName}
                       </strong>
 
                       <span>
-                        {item.username ||
-                          currentUser?.username ||
-                          "luyenht"}
+                        {item.username}
                       </span>
-
                     </div>
                   </td>
 
-                  {/* TIME */}
-                  <td>
-                    <span className="time-cell">
-
-                      <CalendarDays size={16} />
-
-                      {formatDateTime(
-                        item.timestamp
-                      )}
-
-                    </span>
-                  </td>
-
                   {/* DEVICE */}
+
                   <td>
                     <span className="type-badge temperature">
                       ● {item.deviceName}
@@ -864,15 +985,19 @@ export default function ActionHistory({
                   </td>
 
                   {/* ACTION */}
+
                   <td>
                     <span
-                      className={`action-badge ${item.action.toLowerCase()}`}
+                      className={`action-badge ${
+                        item.action.toLowerCase()
+                      }`}
                     >
                       {item.action}
                     </span>
                   </td>
 
                   {/* STATUS */}
+
                   <td>
                     <span
                       className={
@@ -885,120 +1010,156 @@ export default function ActionHistory({
                     </span>
                   </td>
 
+                  {/* TIME + COPY */}
+
+                  <td>
+                    <div
+                      className="time-cell"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <CalendarDays size={16} />
+
+                      <span>
+                        {formatDateTime(item.timestamp)}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleCopyTime(
+                            item.timestamp,
+                            item.id
+                          )
+                        }
+                        title={
+                          copiedId === item.id
+                            ? "Copied!"
+                            : "Copy time"
+                        }
+                        aria-label="Copy time"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "28px",
+                          height: "28px",
+                          padding: 0,
+                          border: "none",
+                          borderRadius: "6px",
+                          background: "transparent",
+                          color:
+                            copiedId === item.id
+                              ? "#16a34a"
+                              : "#64748b",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        {copiedId === item.id ? (
+                          <Check size={16} />
+                        ) : (
+                          <Copy size={16} />
+                        )}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
+
+              {/* KHÔNG CÓ DỮ LIỆU */}
 
               {displayed.length === 0 && (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan={6}
                     className="empty-state"
                   >
                     No action history found
                   </td>
                 </tr>
               )}
-
             </tbody>
-
           </table>
         </div>
 
-        {/* =========================================
-            FOOTER
-        ========================================= */}
-        <div className="table-footer">
+        {/* =================================
+            PHÂN TRANG
+        ================================= */}
 
+        <div className="table-footer">
           <span>
             Showing {displayed.length} of{" "}
             {filtered.length} results
           </span>
 
           <div className="table-footer-right">
+            {/* SỐ DÒNG MỖI TRANG */}
 
-            {/* ROWS PER PAGE */}
             <div className="page-size-control">
-
               <span>
                 Rows per page:
               </span>
 
               <select
                 value={pageSize}
-                onChange={(e) => {
+                onChange={(event) => {
                   setPageSize(
-                    Number(e.target.value)
+                    Number(event.target.value)
                   );
-
                   setPage(1);
                 }}
               >
-                <option value={10}>
-                  10
-                </option>
-
-                <option value={20}>
-                  20
-                </option>
-
-                <option value={50}>
-                  50
-                </option>
-
-                <option value={100}>
-                  100
-                </option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
               </select>
-
             </div>
 
-            {/* PAGINATION */}
-            <div className="pagination">
+            {/* CÁC NÚT CHUYỂN TRANG */}
 
+            <div className="pagination">
               <button
-                disabled={
-                  currentPage === 1
-                }
+                type="button"
+                disabled={currentPage === 1}
                 onClick={() =>
-                  setPage(
-                    currentPage - 1
-                  )
+                  setPage(currentPage - 1)
                 }
               >
                 <ChevronLeft size={18} />
               </button>
 
-              {visiblePages.map(
-                (number) => (
-                  <button
-                    key={number}
-                    className={
-                      currentPage === number
-                        ? "selected"
-                        : ""
-                    }
-                    onClick={() =>
-                      setPage(number)
-                    }
-                  >
-                    {number}
-                  </button>
-                )
-              )}
+              {visiblePages.map((number) => (
+                <button
+                  type="button"
+                  key={number}
+                  className={
+                    currentPage === number
+                      ? "selected"
+                      : ""
+                  }
+                  onClick={() => setPage(number)}
+                >
+                  {number}
+                </button>
+              ))}
 
               <button
+                type="button"
                 disabled={
                   currentPage === totalPages
                 }
                 onClick={() =>
-                  setPage(
-                    currentPage + 1
-                  )
+                  setPage(currentPage + 1)
                 }
               >
                 <ChevronRight size={18} />
               </button>
-
             </div>
           </div>
         </div>

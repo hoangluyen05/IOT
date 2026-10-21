@@ -78,7 +78,7 @@ export const resources = [
     type: "API",
     title: "API Documentation",
     description: "API documentation for Smart Classroom IoT",
-    url: null,
+    url: "https://docs.google.com/document/d/1VUKSj1f0Vqt-nQVt-ow8VfzH_alAfCBrM7LRehQNc9g/edit?tab=t.tpzyxv491fx0",
   },
 
   {
